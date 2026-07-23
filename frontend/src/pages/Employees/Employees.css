@@ -1,0 +1,151 @@
+.page-container {
+  padding: 32px;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #111827;
+}
+
+.page-header p {
+  margin-top: 8px;
+  color: #6b7280;
+}
+
+.primary-button {
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: #1d4ed8;
+}
+
+.page-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+.table-toolbar {
+  margin-bottom: 20px;
+}
+
+.table-toolbar input {
+  width: 320px;
+  padding: 12px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  outline: none;
+}
+
+.table-toolbar input:focus {
+  border-color: #2563eb;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 13px;
+}
+
+td {
+  padding: 16px 15px;
+  border-bottom: 1px solid #eef2f7;
+  color: #374151;
+}
+
+.employee-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.employee-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.employee-info strong {
+  display: block;
+  color: #111827;
+}
+
+.employee-info span {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.risk-badge,
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.risk-badge.critical {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.risk-badge.high {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.risk-badge.medium {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.risk-badge.low {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-badge.active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.loading-state,
+.empty-state {
+  padding: 70px;
+  text-align: center;
+  color: #6b7280;
+}

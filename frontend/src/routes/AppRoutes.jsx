@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
@@ -15,16 +15,30 @@ import Settings from "../pages/Settings/Settings";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Authentication */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Dashboard Layout */}
-        <Route element={<DashboardLayout />}>
+        <Route
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/activity-logs" element={<ActivityLogs />} />
@@ -35,6 +49,8 @@ function AppRoutes() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

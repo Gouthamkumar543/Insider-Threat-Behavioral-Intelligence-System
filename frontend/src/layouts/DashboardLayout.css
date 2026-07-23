@@ -1,35 +1,50 @@
+/* =================================
+   DASHBOARD LAYOUT
+================================= */
+
 .dashboard-layout {
-    display: flex;
-    min-height: 100vh;
-    background: #f5f7fb;
+  min-height: 100vh;
+  width: 100%;
+
+  background: #f5f7fb;
 }
+
+/* =================================
+   MAIN AREA
+================================= */
 
 .dashboard-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  min-height: 100vh;
 
-    /* Leave space for fixed sidebar */
-    margin-left: 260px;
-    width: calc(100% - 260px);
+  margin-left: 260px;
 
-    min-height: 100vh;
+  background: #f5f7fb;
 }
+
+/* =================================
+   NAVBAR SPACE
+================================= */
 
 .dashboard-content {
-    flex: 1;
-    padding: 25px;
-    overflow-y: auto;
-    background: #f5f7fb;
+  min-height: 100vh;
+
+  padding-top: 72px;
+
+  box-sizing: border-box;
 }
 
-/* Responsive Design */
+/* =================================
+   RESPONSIVE
+================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+  .dashboard-main {
+    margin-left: 230px;
+  }
+}
 
-    .dashboard-main {
-        margin-left: 0;
-        width: 100%;
-    }
-
+@media (max-width: 700px) {
+  .dashboard-main {
+    margin-left: 76px;
+  }
 }

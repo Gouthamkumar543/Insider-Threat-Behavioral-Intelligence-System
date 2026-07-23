@@ -1,0 +1,121 @@
+.page-container {
+  padding: 32px;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #111827;
+}
+
+.page-header p {
+  color: #6b7280;
+}
+
+.risk-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.risk-summary-card {
+  padding: 25px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+.risk-summary-card span {
+  display: block;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.risk-summary-card strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 32px;
+}
+
+.critical-card {
+  border-left: 5px solid #dc2626;
+}
+
+.critical-card strong {
+  color: #dc2626;
+}
+
+.high-card {
+  border-left: 5px solid #ea580c;
+}
+
+.high-card strong {
+  color: #ea580c;
+}
+
+.medium-card {
+  border-left: 5px solid #d97706;
+}
+
+.medium-card strong {
+  color: #d97706;
+}
+
+.low-card {
+  border-left: 5px solid #16a34a;
+}
+
+.low-card strong {
+  color: #16a34a;
+}
+
+.page-card {
+  background: white;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+.risk-explanation h2 {
+  margin-top: 0;
+}
+
+.risk-explanation p {
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+.risk-progress {
+  margin-top: 25px;
+}
+
+.risk-progress div:first-child {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 75%;
+  height: 100%;
+  background: #2563eb;
+}
+
+.loading-state {
+  text-align: center;
+  color: #6b7280;
+}

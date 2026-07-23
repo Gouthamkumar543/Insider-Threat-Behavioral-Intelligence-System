@@ -31,7 +31,7 @@ function Dashboard() {
       setError("");
 
       const response = await api.get("/dashboard/summary", {
-        timeout: 120000,
+        timeout: 300000,
       });
 
       console.log("Dashboard API Response:", response.data);
@@ -42,6 +42,13 @@ function Dashboard() {
 
       if (error.code === "ECONNABORTED") {
         setError("Dashboard request timed out.");
+      } else if (error.response) {
+        setError(
+          error.response.data?.detail ||
+            `Server error: ${error.response.status}`
+        );
+      } else if (error.request) {
+        setError("Unable to connect to backend.");
       } else {
         setError("Unable to load dashboard data.");
       }
@@ -54,6 +61,7 @@ function Dashboard() {
     return (
       <div className="dashboard">
         <div className="status-message">
+          <div className="loading-spinner"></div>
           <h2>Loading Dashboard...</h2>
           <p>Processing security analytics data...</p>
         </div>
@@ -106,22 +114,11 @@ function Dashboard() {
   const anomalyChartData = [
     {
       name: "Anomalies",
-      value: Number(
-        anomalyDistribution.anomalies ||
-        stats.totalAnomalies ||
-        0
-      ),
+      value: Number(anomalyDistribution.anomalies || 0),
     },
     {
       name: "Normal",
-      value: Number(
-        anomalyDistribution.normal ||
-        Math.max(
-          Number(stats.totalEmployees || 0) -
-          Number(stats.totalAnomalies || 0),
-          0
-        )
-      ),
+      value: Number(anomalyDistribution.normal || 0),
     },
   ];
 
@@ -135,32 +132,46 @@ function Dashboard() {
       value: Number(stats.fileAccessEvents || 0),
     },
     {
-      name: "Anomalies",
-      value: Number(stats.totalAnomalies || 0),
+      name: "Emails",
+      value: Number(stats.emailActivities || 0),
+    },
+    {
+      name: "Devices",
+      value: Number(stats.deviceActivities || 0),
     },
   ];
 
   return (
     <div className="dashboard">
 
+      {/* HEADER */}
+
       <div className="dashboard-header">
 
         <div>
-          <h1>Insider Threat Dashboard</h1>
+          <div className="dashboard-title-row">
+            <div className="ai-logo">AI</div>
 
-          <p>
-            Behavioral intelligence and security monitoring overview
-          </p>
+            <div>
+              <h1>Insider AI</h1>
+
+              <p>
+                Behavioral intelligence and security monitoring overview
+              </p>
+            </div>
+          </div>
         </div>
 
         <button
           className="refresh-button"
           onClick={loadDashboard}
         >
-          Refresh Data
+          ↻ Refresh Data
         </button>
 
       </div>
+
+      {/* STAT CARDS */}
 
       <div className="stats-grid">
 
@@ -168,90 +179,95 @@ function Dashboard() {
           <span>Total Users</span>
 
           <strong>
-            {Number(
-              stats.totalEmployees || 0
-            ).toLocaleString()}
+            {Number(stats.totalEmployees || 0).toLocaleString()}
           </strong>
+
+          <small>Registered employees</small>
         </div>
 
         <div className="stat-card">
           <span>Login Activities</span>
 
           <strong>
-            {Number(
-              stats.loginActivities || 0
-            ).toLocaleString()}
+            {Number(stats.loginActivities || 0).toLocaleString()}
           </strong>
+
+          <small>Authentication events</small>
         </div>
 
         <div className="stat-card">
           <span>File Access Events</span>
 
           <strong>
-            {Number(
-              stats.fileAccessEvents || 0
-            ).toLocaleString()}
+            {Number(stats.fileAccessEvents || 0).toLocaleString()}
           </strong>
+
+          <small>File interactions</small>
         </div>
 
         <div className="stat-card">
           <span>Total Anomalies</span>
 
           <strong>
-            {Number(
-              stats.totalAnomalies || 0
-            ).toLocaleString()}
+            {Number(stats.totalAnomalies || 0).toLocaleString()}
           </strong>
+
+          <small>Detected anomalies</small>
         </div>
 
         <div className="stat-card critical-card">
           <span>Critical Risk</span>
 
           <strong>
-            {Number(
-              stats.criticalRisk || 0
-            ).toLocaleString()}
+            {Number(stats.criticalRisk || 0).toLocaleString()}
           </strong>
+
+          <small>Immediate attention</small>
         </div>
 
         <div className="stat-card high-card">
           <span>High Risk</span>
 
           <strong>
-            {Number(
-              stats.highRisk || 0
-            ).toLocaleString()}
+            {Number(stats.highRisk || 0).toLocaleString()}
           </strong>
+
+          <small>Requires monitoring</small>
         </div>
 
-        <div className="stat-card">
+        <div className="stat-card medium-card">
           <span>Medium Risk</span>
 
           <strong>
-            {Number(
-              stats.mediumRisk || 0
-            ).toLocaleString()}
+            {Number(stats.mediumRisk || 0).toLocaleString()}
           </strong>
+
+          <small>Needs observation</small>
         </div>
 
-        <div className="stat-card">
+        <div className="stat-card low-card">
           <span>Low Risk</span>
 
           <strong>
-            {Number(
-              stats.lowRisk || 0
-            ).toLocaleString()}
+            {Number(stats.lowRisk || 0).toLocaleString()}
           </strong>
+
+          <small>Normal behavior</small>
         </div>
 
       </div>
+
+      {/* CHARTS */}
 
       <div className="charts-grid">
 
         <div className="dashboard-box chart-box">
 
           <div className="box-header">
-            <h2>Risk Distribution</h2>
+            <div>
+              <h2>Risk Distribution</h2>
+              <p>Current employee risk levels</p>
+            </div>
           </div>
 
           <div className="chart-container">
@@ -273,13 +289,11 @@ function Dashboard() {
                   label
                 >
 
-                  {riskChartData.map(
-                    (entry, index) => (
-                      <Cell
-                        key={`risk-cell-${index}`}
-                      />
-                    )
-                  )}
+                  {riskChartData.map((entry, index) => (
+                    <Cell
+                      key={`risk-cell-${index}`}
+                    />
+                  ))}
 
                 </Pie>
 
@@ -298,7 +312,10 @@ function Dashboard() {
         <div className="dashboard-box chart-box">
 
           <div className="box-header">
-            <h2>Activity Overview</h2>
+            <div>
+              <h2>Activity Overview</h2>
+              <p>Security event volume</p>
+            </div>
           </div>
 
           <div className="chart-container">
@@ -340,7 +357,10 @@ function Dashboard() {
         <div className="dashboard-box chart-box">
 
           <div className="box-header">
-            <h2>Anomaly Detection</h2>
+            <div>
+              <h2>Anomaly Detection</h2>
+              <p>Normal versus suspicious behavior</p>
+            </div>
           </div>
 
           <div className="chart-container">
@@ -362,13 +382,11 @@ function Dashboard() {
                   label
                 >
 
-                  {anomalyChartData.map(
-                    (entry, index) => (
-                      <Cell
-                        key={`anomaly-cell-${index}`}
-                      />
-                    )
-                  )}
+                  {anomalyChartData.map((entry, index) => (
+                    <Cell
+                      key={`anomaly-cell-${index}`}
+                    />
+                  ))}
 
                 </Pie>
 
@@ -386,54 +404,52 @@ function Dashboard() {
 
       </div>
 
+      {/* RISK SUMMARY */}
+
       <div className="dashboard-box">
 
         <div className="box-header">
-          <h2>Risk Distribution Summary</h2>
+          <div>
+            <h2>Risk Distribution Summary</h2>
+            <p>Current threat classification</p>
+          </div>
         </div>
 
         <div className="risk-list">
 
           <div className="risk-item critical">
             <span>Critical</span>
-
-            <strong>
-              {riskDistribution.critical || 0}
-            </strong>
+            <strong>{riskDistribution.critical || 0}</strong>
           </div>
 
           <div className="risk-item high">
             <span>High</span>
-
-            <strong>
-              {riskDistribution.high || 0}
-            </strong>
+            <strong>{riskDistribution.high || 0}</strong>
           </div>
 
           <div className="risk-item medium">
             <span>Medium</span>
-
-            <strong>
-              {riskDistribution.medium || 0}
-            </strong>
+            <strong>{riskDistribution.medium || 0}</strong>
           </div>
 
           <div className="risk-item low">
             <span>Low</span>
-
-            <strong>
-              {riskDistribution.low || 0}
-            </strong>
+            <strong>{riskDistribution.low || 0}</strong>
           </div>
 
         </div>
 
       </div>
 
+      {/* TOP RISK USERS */}
+
       <div className="dashboard-box">
 
         <div className="box-header">
-          <h2>Top Risk Users</h2>
+          <div>
+            <h2>Top Risk Users</h2>
+            <p>Employees requiring security attention</p>
+          </div>
         </div>
 
         <div className="table-container">
@@ -441,14 +457,14 @@ function Dashboard() {
           <table>
 
             <thead>
-
               <tr>
                 <th>User</th>
                 <th>Risk Score</th>
                 <th>Risk Level</th>
                 <th>Login Count</th>
+                <th>After Hours</th>
+                <th>Weekend Activity</th>
               </tr>
-
             </thead>
 
             <tbody>
@@ -457,7 +473,7 @@ function Dashboard() {
 
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="6"
                     className="empty-message"
                   >
                     No risk data available
@@ -466,43 +482,51 @@ function Dashboard() {
 
               ) : (
 
-                topRiskUsers.map(
-                  (user, index) => (
+                topRiskUsers.map((user, index) => (
 
-                    <tr
-                      key={`${user.user}-${index}`}
-                    >
+                  <tr
+                    key={`${user.user}-${index}`}
+                  >
 
-                      <td>
-                        {user.user}
-                      </td>
+                    <td>
+                      <strong>{user.user}</strong>
+                    </td>
 
-                      <td>
-                        {Number(
-                          user.risk_score || 0
-                        ).toFixed(2)}
-                      </td>
+                    <td>
+                      {Number(user.risk_score || 0).toFixed(2)}
+                    </td>
 
-                      <td>
+                    <td>
+                      <span
+                        className={`risk-badge ${
+                          user.risk_level?.toLowerCase() || "low"
+                        }`}
+                      >
+                        {user.risk_level || "Low"}
+                      </span>
+                    </td>
 
-                        <span
-                          className={`risk-badge ${
-                            user.risk_level?.toLowerCase() || "low"
-                          }`}
-                        >
-                          {user.risk_level || "Low"}
-                        </span>
+                    <td>
+                      {Number(
+                        user.login_count || 0
+                      ).toLocaleString()}
+                    </td>
 
-                      </td>
+                    <td>
+                      {(Number(
+                        user.after_hours_ratio || 0
+                      ) * 100).toFixed(1)}%
+                    </td>
 
-                      <td>
-                        {user.login_count || 0}
-                      </td>
+                    <td>
+                      {(Number(
+                        user.weekend_ratio || 0
+                      ) * 100).toFixed(1)}%
+                    </td>
 
-                    </tr>
+                  </tr>
 
-                  )
-                )
+                ))
 
               )}
 
@@ -514,10 +538,15 @@ function Dashboard() {
 
       </div>
 
+      {/* RECENT LOGIN ACTIVITY */}
+
       <div className="dashboard-box">
 
         <div className="box-header">
-          <h2>Recent Login Activity</h2>
+          <div>
+            <h2>Recent Login Activity</h2>
+            <p>Latest authentication events</p>
+          </div>
         </div>
 
         <div className="table-container">
@@ -525,14 +554,12 @@ function Dashboard() {
           <table>
 
             <thead>
-
               <tr>
                 <th>User</th>
                 <th>Computer</th>
                 <th>Date</th>
                 <th>Activity</th>
               </tr>
-
             </thead>
 
             <tbody>
@@ -550,33 +577,27 @@ function Dashboard() {
 
               ) : (
 
-                recentLogins.map(
-                  (login, index) => (
+                recentLogins.map((login, index) => (
 
-                    <tr
-                      key={`${login.id}-${index}`}
-                    >
+                  <tr
+                    key={`${login.id}-${index}`}
+                  >
 
-                      <td>
-                        {login.user}
-                      </td>
+                    <td>{login.user}</td>
 
-                      <td>
-                        {login.pc}
-                      </td>
+                    <td>{login.pc}</td>
 
-                      <td>
-                        {login.date}
-                      </td>
+                    <td>{login.date}</td>
 
-                      <td>
+                    <td>
+                      <span className="activity-badge">
                         {login.activity}
-                      </td>
+                      </span>
+                    </td>
 
-                    </tr>
+                  </tr>
 
-                  )
-                )
+                ))
 
               )}
 
@@ -588,10 +609,15 @@ function Dashboard() {
 
       </div>
 
+      {/* RECENT FILE ACCESS */}
+
       <div className="dashboard-box">
 
         <div className="box-header">
-          <h2>Recent File Access</h2>
+          <div>
+            <h2>Recent File Access</h2>
+            <p>Latest file interaction events</p>
+          </div>
         </div>
 
         <div className="table-container">
@@ -599,14 +625,12 @@ function Dashboard() {
           <table>
 
             <thead>
-
               <tr>
                 <th>User</th>
                 <th>Computer</th>
                 <th>Date</th>
                 <th>Filename</th>
               </tr>
-
             </thead>
 
             <tbody>
@@ -624,33 +648,25 @@ function Dashboard() {
 
               ) : (
 
-                recentFileAccess.map(
-                  (file, index) => (
+                recentFileAccess.map((file, index) => (
 
-                    <tr
-                      key={`${file.id}-${index}`}
-                    >
+                  <tr
+                    key={`${file.id}-${index}`}
+                  >
 
-                      <td>
-                        {file.user}
-                      </td>
+                    <td>{file.user}</td>
 
-                      <td>
-                        {file.pc}
-                      </td>
+                    <td>{file.pc}</td>
 
-                      <td>
-                        {file.date}
-                      </td>
+                    <td>{file.date}</td>
 
-                      <td>
-                        {file.filename}
-                      </td>
+                    <td className="filename-cell">
+                      {file.filename}
+                    </td>
 
-                    </tr>
+                  </tr>
 
-                  )
-                )
+                ))
 
               )}
 

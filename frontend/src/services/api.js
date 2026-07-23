@@ -17,22 +17,20 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("token_type");
       localStorage.removeItem("user");
 
-      window.location.href = "/";
+      if (window.location.pathname !== "/" && window.location.pathname !== "/register") {
+        window.location.href = "/";
+      }
     }
 
     return Promise.reject(error);

@@ -12,17 +12,17 @@
 .register-card {
   width: 100%;
   max-width: 430px;
-  background: white;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 24px;
-  padding: 56px 50px 48px;
+  padding: 48px 50px 42px;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
   box-sizing: border-box;
 }
 
 .register-header {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: 32px;
 }
 
 .register-header h1 {
@@ -44,21 +44,21 @@
 }
 
 .form-group {
-  margin-bottom: 22px;
+  margin-bottom: 19px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 9px;
+  margin-bottom: 8px;
   color: #172554;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  height: 56px;
+  height: 54px;
   padding: 0 18px;
   box-sizing: border-box;
   border: 1px solid #cbd5e1;
@@ -72,7 +72,7 @@
 }
 
 .form-group input::placeholder {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .form-group input:focus,
@@ -89,8 +89,8 @@
     linear-gradient(45deg, transparent 50%, #64748b 50%),
     linear-gradient(135deg, #64748b 50%, transparent 50%);
   background-position:
-    calc(100% - 22px) 24px,
-    calc(100% - 16px) 24px;
+    calc(100% - 22px) 23px,
+    calc(100% - 16px) 23px;
   background-size:
     6px 6px,
     6px 6px;
@@ -102,25 +102,25 @@
 }
 
 .register-error {
-  margin: -4px 0 16px;
+  margin: -2px 0 14px;
   color: #dc2626;
   font-size: 14px;
 }
 
 .register-success {
-  margin: -4px 0 16px;
+  margin: -2px 0 14px;
   color: #16a34a;
   font-size: 14px;
 }
 
 .register-button {
   width: 100%;
-  height: 56px;
+  height: 54px;
   margin-top: 4px;
   border: none;
   border-radius: 10px;
   background: #2563eb;
-  color: white;
+  color: #ffffff;
   font-size: 17px;
   font-weight: 600;
   font-family: inherit;
@@ -139,7 +139,7 @@
 
 .register-footer {
   text-align: center;
-  margin-top: 30px;
+  margin-top: 28px;
 }
 
 .register-footer p {

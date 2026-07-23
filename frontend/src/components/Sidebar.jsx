@@ -11,9 +11,11 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 function Sidebar() {
+  const navigate = useNavigate();
+
   const menuItems = [
     {
       title: "Dashboard",
@@ -62,17 +64,24 @@ function Sidebar() {
     },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("token_type");
+    localStorage.removeItem("user");
+
+    navigate("/", { replace: true });
+  };
+
   return (
     <aside className="sidebar">
-
       <div className="logo">
         <h2>🛡️ Insider AI</h2>
       </div>
 
       <nav className="menu">
-        {menuItems.map((item, index) => (
+        {menuItems.map((item) => (
           <NavLink
-            key={index}
+            key={item.path}
             to={item.path}
             className={({ isActive }) =>
               isActive ? "menu-item active" : "menu-item"
@@ -85,12 +94,11 @@ function Sidebar() {
       </nav>
 
       <div className="logout">
-        <button>
+        <button onClick={handleLogout}>
           <LogOut size={18} />
           Logout
         </button>
       </div>
-
     </aside>
   );
 }

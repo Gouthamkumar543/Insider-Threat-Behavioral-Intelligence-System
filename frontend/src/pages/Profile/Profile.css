@@ -1,0 +1,86 @@
+.page-container {
+  padding: 32px;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #111827;
+}
+
+.page-header p {
+  color: #6b7280;
+}
+
+.profile-card {
+  max-width: 700px;
+  background: white;
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+.profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.profile-card h2 {
+  margin-bottom: 5px;
+  color: #111827;
+}
+
+.profile-role {
+  color: #6b7280;
+}
+
+.profile-details {
+  margin-top: 30px;
+  display: grid;
+  gap: 18px;
+}
+
+.profile-details div {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.profile-details span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.profile-details strong {
+  color: #111827;
+}
+
+.active-text {
+  color: #16a34a !important;
+}
+
+.primary-button {
+  margin-top: 25px;
+  padding: 12px 20px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 9px;
+  cursor: pointer;
+}

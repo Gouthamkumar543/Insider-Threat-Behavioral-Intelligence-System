@@ -12,7 +12,7 @@
 .register-card {
   width: 100%;
   max-width: 430px;
-  background: white;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 24px;
   padding: 56px 50px 48px;
@@ -71,7 +71,7 @@
 }
 
 .form-group input::placeholder {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .form-group input:focus {
@@ -85,6 +85,12 @@
   font-size: 14px;
 }
 
+.register-success {
+  margin: -4px 0 16px;
+  color: #16a34a;
+  font-size: 14px;
+}
+
 .register-button {
   width: 100%;
   height: 56px;
@@ -92,7 +98,7 @@
   border: none;
   border-radius: 10px;
   background: #2563eb;
-  color: white;
+  color: #ffffff;
   font-size: 17px;
   font-weight: 600;
   font-family: inherit;

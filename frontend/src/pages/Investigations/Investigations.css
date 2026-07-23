@@ -1,0 +1,93 @@
+.page-container {
+  padding: 32px;
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #111827;
+}
+
+.page-header p {
+  color: #6b7280;
+}
+
+.primary-button {
+  border: none;
+  padding: 12px 20px;
+  background: #2563eb;
+  color: white;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.investigation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 22px;
+}
+
+.investigation-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+}
+
+.investigation-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.case-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.investigation-status {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+}
+
+.investigation-card h3 {
+  margin-top: 22px;
+  color: #111827;
+}
+
+.investigation-details {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.view-button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 10px;
+  border: 1px solid #2563eb;
+  background: white;
+  color: #2563eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.empty-state {
+  background: white;
+  padding: 70px;
+  text-align: center;
+  color: #6b7280;
+  border-radius: 16px;
+}
