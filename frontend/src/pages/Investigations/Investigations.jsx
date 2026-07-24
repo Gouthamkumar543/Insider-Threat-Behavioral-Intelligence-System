@@ -14,6 +14,7 @@ import {
 import "./Investigations.css";
 
 const API_URL = "http://127.0.0.1:8000";
+const INVESTIGATIONS_API = `${API_URL}/investigations`;
 
 function Investigations() {
   const [investigations, setInvestigations] = useState([]);
@@ -55,12 +56,12 @@ function Investigations() {
       setError("");
 
       const response = await axios.get(
-        `${API_URL}/investigations`
+        INVESTIGATIONS_API
       );
 
       const data = Array.isArray(response.data)
         ? response.data
-        : response.data.investigations || [];
+        : response.data?.investigations || [];
 
       setInvestigations(data);
     } catch (err) {
@@ -119,7 +120,7 @@ function Investigations() {
 
     try {
       await axios.post(
-        `${API_URL}/investigations`,
+        INVESTIGATIONS_API,
         {
           ...formData,
           employee_id: formData.employee_id
@@ -151,7 +152,7 @@ function Investigations() {
   const updateStatus = async (id, status) => {
     try {
       await axios.patch(
-        `${API_URL}/investigations/${id}`,
+        `${INVESTIGATIONS_API}/${id}`,
         { status }
       );
 
@@ -179,16 +180,17 @@ function Investigations() {
       total: investigations.length,
       open: investigations.filter(
         (item) =>
-          String(item.status).toLowerCase() === "open"
+          String(item.status || "").toLowerCase() ===
+          "open"
       ).length,
       inProgress: investigations.filter(
         (item) =>
-          String(item.status).toLowerCase() ===
+          String(item.status || "").toLowerCase() ===
           "in progress"
       ).length,
       resolved: investigations.filter(
         (item) =>
-          String(item.status).toLowerCase() ===
+          String(item.status || "").toLowerCase() ===
           "resolved"
       ).length
     };
@@ -373,7 +375,8 @@ function Investigations() {
                     <td>
                       <div className="investigation-title">
                         <strong>
-                          {item.title || "Untitled Investigation"}
+                          {item.title ||
+                            "Untitled Investigation"}
                         </strong>
 
                         <span>

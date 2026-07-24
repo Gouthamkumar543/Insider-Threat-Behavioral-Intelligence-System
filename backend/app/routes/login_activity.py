@@ -14,17 +14,22 @@ router = APIRouter(
 def get_login_activity(
     db: Session = Depends(get_db)
 ):
-    activities = db.query(
-        LoginActivity
-    ).order_by(
-        LoginActivity.login_time.desc()
-    ).limit(1000).all()
+    activities = (
+        db.query(LoginActivity)
+        .order_by(LoginActivity.login_time.desc())
+        .limit(1000)
+        .all()
+    )
 
     return [
         {
             "id": activity.id,
             "employee_id": activity.employee_id,
-            "username": activity.username,
+
+            # LoginActivity model uses "user"
+            # Frontend expects "username"
+            "username": activity.user,
+
             "pc": activity.pc,
             "activity": activity.activity,
             "login_time": activity.login_time,
@@ -42,19 +47,19 @@ def get_login_activity(
 def get_login_anomalies(
     db: Session = Depends(get_db)
 ):
-    activities = db.query(
-        LoginActivity
-    ).filter(
-        LoginActivity.is_anomaly == True
-    ).order_by(
-        LoginActivity.anomaly_score.desc()
-    ).limit(1000).all()
+    activities = (
+        db.query(LoginActivity)
+        .filter(LoginActivity.is_anomaly == True)
+        .order_by(LoginActivity.anomaly_score.desc())
+        .limit(1000)
+        .all()
+    )
 
     return [
         {
             "id": activity.id,
             "employee_id": activity.employee_id,
-            "username": activity.username,
+            "username": activity.user,
             "pc": activity.pc,
             "activity": activity.activity,
             "login_time": activity.login_time,
@@ -69,11 +74,11 @@ def get_single_login_activity(
     activity_id: int,
     db: Session = Depends(get_db)
 ):
-    activity = db.query(
-        LoginActivity
-    ).filter(
-        LoginActivity.id == activity_id
-    ).first()
+    activity = (
+        db.query(LoginActivity)
+        .filter(LoginActivity.id == activity_id)
+        .first()
+    )
 
     if not activity:
         raise HTTPException(
@@ -84,7 +89,7 @@ def get_single_login_activity(
     return {
         "id": activity.id,
         "employee_id": activity.employee_id,
-        "username": activity.username,
+        "username": activity.user,
         "pc": activity.pc,
         "activity": activity.activity,
         "login_time": activity.login_time,

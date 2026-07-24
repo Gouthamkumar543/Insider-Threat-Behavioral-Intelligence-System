@@ -2,84 +2,65 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models.models import (
-    LoginActivity,
-    FileAccess
-)
+from app.models.models import LoginActivity, FileAccess
 
 router = APIRouter(
     prefix="/activity",
-    tags=["Activity Monitoring"]
+    tags=["Activity Logs"]
 )
 
 
-@router.get("/login")
-def get_login_activities(
+@router.get("/")
+def get_activity_logs(
     db: Session = Depends(get_db)
 ):
-    return db.query(
-        LoginActivity
-    ).order_by(
-        LoginActivity.login_time.desc()
-    ).limit(1000).all()
+    login_logs = (
+        db.query(LoginActivity)
+        .order_by(LoginActivity.login_time.desc())
+        .limit(500)
+        .all()
+    )
 
-
-@router.get("/files")
-def get_file_activities(
-    db: Session = Depends(get_db)
-):
-    return db.query(
-        FileAccess
-    ).order_by(
-        FileAccess.access_time.desc()
-    ).limit(1000).all()
-
-
-@router.get("/all")
-def get_all_activities(
-    db: Session = Depends(get_db)
-):
-    login_activities = db.query(
-        LoginActivity
-    ).order_by(
-        LoginActivity.login_time.desc()
-    ).limit(500).all()
-
-    file_activities = db.query(
-        FileAccess
-    ).order_by(
-        FileAccess.access_time.desc()
-    ).limit(500).all()
+    file_logs = (
+        db.query(FileAccess)
+        .order_by(FileAccess.access_time.desc())
+        .limit(500)
+        .all()
+    )
 
     activities = []
 
-    for activity in login_activities:
-        activities.append({
-            "id": activity.id,
-            "type": "Login",
-            "username": activity.username,
-            "pc": activity.pc,
-            "activity": activity.activity,
-            "timestamp": activity.login_time,
-            "is_anomaly": activity.is_anomaly,
-            "anomaly_score": activity.anomaly_score
-        })
+    for log in login_logs:
+        activities.append(
+            {
+                "id": log.id,
+                "user": log.user,
+                "type": "Login",
+                "activity": log.activity,
+                "pc": log.pc,
+                "timestamp": log.login_time,
+                "is_anomaly": log.is_anomaly,
+                "anomaly_score": log.anomaly_score
+            }
+        )
 
-    for activity in file_activities:
-        activities.append({
-            "id": activity.id,
-            "type": "File Access",
-            "username": activity.username,
-            "pc": activity.pc,
-            "activity": activity.action,
-            "filename": activity.filename,
-            "timestamp": activity.access_time,
-            "is_anomaly": activity.is_anomaly,
-            "anomaly_score": activity.anomaly_score
-        })
+    for log in file_logs:
+        activities.append(
+            {
+                "id": log.id,
+                "user": log.user,
+                "type": "File Access",
+                "activity": log.action,
+                "pc": log.pc,
+                "filename": log.filename,
+                "timestamp": log.access_time,
+                "is_anomaly": log.is_anomaly,
+                "anomaly_score": log.anomaly_score
+            }
+        )
 
     activities.sort(
-        key=lambda item: item["timestamp"],
+        key=lambda activity: activity["timestamp"],
         reverse=True
     )
 

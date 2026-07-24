@@ -26,7 +26,7 @@ function Employees() {
 
   useEffect(() => {
     filterEmployees();
-  }, [search, riskFilter, employees]);
+  }, [employees, search, riskFilter]);
 
   const loadEmployees = async () => {
     try {
@@ -45,7 +45,7 @@ function Employees() {
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-        "Unable to load employees"
+          "Unable to load employees"
       );
     } finally {
       setLoading(false);
@@ -59,25 +59,24 @@ function Employees() {
       const query = search.toLowerCase();
 
       result = result.filter((employee) =>
-        String(employee.name || "")
-          .toLowerCase()
-          .includes(query) ||
-        String(employee.employee_id || "")
-          .toLowerCase()
-          .includes(query) ||
-        String(employee.email || "")
-          .toLowerCase()
-          .includes(query) ||
-        String(employee.department || "")
-          .toLowerCase()
-          .includes(query)
+        [
+          employee.name,
+          employee.employee_id,
+          employee.email,
+          employee.department,
+          employee.designation
+        ]
+          .map((value) =>
+            String(value || "").toLowerCase()
+          )
+          .some((value) => value.includes(query))
       );
     }
 
     if (riskFilter !== "All") {
       result = result.filter(
         (employee) =>
-          String(employee.risk_level || "")
+          String(employee.risk_level || "Low")
             .toLowerCase() ===
           riskFilter.toLowerCase()
       );
@@ -88,6 +87,14 @@ function Employees() {
 
   const getRiskClass = (risk) => {
     return String(risk || "Low").toLowerCase();
+  };
+
+  const getRiskCount = (level) => {
+    return employees.filter(
+      (employee) =>
+        String(employee.risk_level || "Low")
+          .toLowerCase() === level.toLowerCase()
+    ).length;
   };
 
   if (loading) {
@@ -105,6 +112,7 @@ function Employees() {
       <div className="employees-header">
         <div>
           <h1>Employees</h1>
+
           <p>
             Monitor employee profiles and behavioral risk levels
           </p>
@@ -148,14 +156,7 @@ function Employees() {
 
           <div>
             <span>Critical Risk</span>
-            <strong>
-              {
-                employees.filter(
-                  (employee) =>
-                    employee.risk_level === "Critical"
-                ).length
-              }
-            </strong>
+            <strong>{getRiskCount("Critical")}</strong>
           </div>
         </div>
 
@@ -166,14 +167,7 @@ function Employees() {
 
           <div>
             <span>High Risk</span>
-            <strong>
-              {
-                employees.filter(
-                  (employee) =>
-                    employee.risk_level === "High"
-                ).length
-              }
-            </strong>
+            <strong>{getRiskCount("High")}</strong>
           </div>
         </div>
 
@@ -184,14 +178,7 @@ function Employees() {
 
           <div>
             <span>Medium Risk</span>
-            <strong>
-              {
-                employees.filter(
-                  (employee) =>
-                    employee.risk_level === "Medium"
-                ).length
-              }
-            </strong>
+            <strong>{getRiskCount("Medium")}</strong>
           </div>
         </div>
       </div>
@@ -242,7 +229,9 @@ function Employees() {
         {filteredEmployees.length === 0 ? (
           <div className="employees-empty">
             <Users size={42} />
+
             <h3>No employees found</h3>
+
             <p>
               Try changing your search or filter.
             </p>
@@ -264,89 +253,94 @@ function Employees() {
               </thead>
 
               <tbody>
-                {filteredEmployees.map(
-                  (employee) => (
-                    <tr key={employee.id}>
-                      <td>
-                        <div className="employee-name-cell">
-                          <div className="employee-avatar">
-                            {String(
-                              employee.name || "U"
-                            )
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-
-                          <div>
-                            <strong>
-                              {employee.name || "Unknown"}
-                            </strong>
-
-                            <span>
-                              {employee.email || "-"}
-                            </span>
-                          </div>
+                {filteredEmployees.map((employee) => (
+                  <tr
+                    key={
+                      employee.id ||
+                      employee.employee_id
+                    }
+                  >
+                    <td>
+                      <div className="employee-name-cell">
+                        <div className="employee-avatar">
+                          {String(
+                            employee.name || "U"
+                          )
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
-                      </td>
 
-                      <td>
-                        {employee.employee_id || "-"}
-                      </td>
+                        <div>
+                          <strong>
+                            {employee.name || "Unknown"}
+                          </strong>
 
-                      <td>
-                        {employee.department || "-"}
-                      </td>
+                          <span>
+                            {employee.email || "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
 
-                      <td>
-                        {employee.designation || "-"}
-                      </td>
+                    <td>
+                      {employee.employee_id || "-"}
+                    </td>
 
-                      <td>
-                        <strong>
-                          {employee.risk_score || 0}
-                        </strong>
-                      </td>
+                    <td>
+                      {employee.department || "-"}
+                    </td>
 
-                      <td>
-                        <span
-                          className={`employee-risk-badge ${getRiskClass(
-                            employee.risk_level
-                          )}`}
-                        >
-                          {employee.risk_level || "Low"}
-                        </span>
-                      </td>
+                    <td>
+                      {employee.designation || "-"}
+                    </td>
 
-                      <td>
-                        <span
-                          className={`employee-status ${
-                            employee.is_active
-                              ? "active"
-                              : "inactive"
-                          }`}
-                        >
-                          {employee.is_active
-                            ? "Active"
-                            : "Inactive"}
-                        </span>
-                      </td>
+                    <td>
+                      <strong>
+                        {Number(
+                          employee.risk_score || 0
+                        ).toFixed(1)}
+                      </strong>
+                    </td>
 
-                      <td>
-                        <button
-                          className="employee-view-button"
-                          onClick={() =>
-                            setSelectedEmployee(
-                              employee
-                            )
-                          }
-                        >
-                          <Eye size={16} />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                )}
+                    <td>
+                      <span
+                        className={`employee-risk-badge ${getRiskClass(
+                          employee.risk_level
+                        )}`}
+                      >
+                        {employee.risk_level || "Low"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`employee-status ${
+                          employee.is_active
+                            ? "active"
+                            : "inactive"
+                        }`}
+                      >
+                        {employee.is_active
+                          ? "Active"
+                          : "Inactive"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        className="employee-view-button"
+                        onClick={() =>
+                          setSelectedEmployee(
+                            employee
+                          )
+                        }
+                      >
+                        <Eye size={16} />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -369,7 +363,8 @@ function Employees() {
             <div className="employee-modal-header">
               <div>
                 <h2>
-                  {selectedEmployee.name}
+                  {selectedEmployee.name ||
+                    "Employee"}
                 </h2>
 
                 <p>
@@ -398,13 +393,16 @@ function Employees() {
               <div className="employee-details-grid">
                 <div>
                   <span>Employee ID</span>
+
                   <strong>
-                    {selectedEmployee.employee_id || "-"}
+                    {selectedEmployee.employee_id ||
+                      "-"}
                   </strong>
                 </div>
 
                 <div>
                   <span>Email</span>
+
                   <strong>
                     {selectedEmployee.email || "-"}
                   </strong>
@@ -412,20 +410,25 @@ function Employees() {
 
                 <div>
                   <span>Department</span>
+
                   <strong>
-                    {selectedEmployee.department || "-"}
+                    {selectedEmployee.department ||
+                      "-"}
                   </strong>
                 </div>
 
                 <div>
                   <span>Designation</span>
+
                   <strong>
-                    {selectedEmployee.designation || "-"}
+                    {selectedEmployee.designation ||
+                      "-"}
                   </strong>
                 </div>
 
                 <div>
                   <span>Manager</span>
+
                   <strong>
                     {selectedEmployee.manager || "-"}
                   </strong>
@@ -433,20 +436,26 @@ function Employees() {
 
                 <div>
                   <span>Risk Score</span>
+
                   <strong>
-                    {selectedEmployee.risk_score || 0}
+                    {Number(
+                      selectedEmployee.risk_score || 0
+                    ).toFixed(1)}
                   </strong>
                 </div>
 
                 <div>
                   <span>Risk Level</span>
+
                   <strong>
-                    {selectedEmployee.risk_level || "Low"}
+                    {selectedEmployee.risk_level ||
+                      "Low"}
                   </strong>
                 </div>
 
                 <div>
                   <span>Status</span>
+
                   <strong>
                     {selectedEmployee.is_active
                       ? "Active"
@@ -454,6 +463,16 @@ function Employees() {
                   </strong>
                 </div>
               </div>
+            </div>
+
+            <div className="employee-modal-footer">
+              <button
+                onClick={() =>
+                  setSelectedEmployee(null)
+                }
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

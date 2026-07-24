@@ -5,8 +5,11 @@ import {
   RefreshCw,
   Activity,
   Monitor,
-  Calendar,
-  X
+  FileText,
+  X,
+  Eye,
+  AlertTriangle,
+  CheckCircle
 } from "lucide-react";
 import "./ActivityLogs.css";
 
@@ -17,7 +20,7 @@ function ActivityLogs() {
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
-  const [anomalyFilter, setAnomalyFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedLog, setSelectedLog] = useState(null);
@@ -28,7 +31,7 @@ function ActivityLogs() {
 
   useEffect(() => {
     filterLogs();
-  }, [logs, search, typeFilter, anomalyFilter]);
+  }, [logs, search, typeFilter, statusFilter]);
 
   const loadLogs = async () => {
     try {
@@ -43,22 +46,57 @@ function ActivityLogs() {
 
       const loginData = Array.isArray(loginResponse.data)
         ? loginResponse.data
-        : [];
+        : loginResponse.data?.data || [];
 
       const fileData = Array.isArray(fileResponse.data)
         ? fileResponse.data
-        : [];
+        : fileResponse.data?.data || [];
 
       const loginLogs = loginData.map((item) => ({
         ...item,
         log_type: "Login",
-        event_time: item.login_time
+        event_time:
+          item.login_time ||
+          item.date ||
+          item.created_at,
+        username:
+          item.username ||
+          item.user ||
+          item.employee_name ||
+          "-",
+        device:
+          item.pc ||
+          item.device_name ||
+          item.device ||
+          "-",
+        event:
+          item.activity ||
+          (item.success === false
+            ? "Failed Login"
+            : "Successful Login")
       }));
 
       const fileLogs = fileData.map((item) => ({
         ...item,
         log_type: "File Access",
-        event_time: item.access_time
+        event_time:
+          item.access_time ||
+          item.date ||
+          item.created_at,
+        username:
+          item.username ||
+          item.user ||
+          item.employee_name ||
+          "-",
+        device:
+          item.pc ||
+          item.device_name ||
+          item.device ||
+          "-",
+        event:
+          item.filename ||
+          item.file_name ||
+          "File Access"
       }));
 
       const combinedLogs = [
@@ -74,7 +112,7 @@ function ActivityLogs() {
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-        "Unable to load activity logs"
+          "Unable to load activity logs"
       );
     } finally {
       setLoading(false);
@@ -91,13 +129,10 @@ function ActivityLogs() {
         String(log.username || "")
           .toLowerCase()
           .includes(query) ||
-        String(log.pc || "")
+        String(log.device || "")
           .toLowerCase()
           .includes(query) ||
-        String(log.filename || "")
-          .toLowerCase()
-          .includes(query) ||
-        String(log.activity || "")
+        String(log.event || "")
           .toLowerCase()
           .includes(query)
       );
@@ -109,13 +144,13 @@ function ActivityLogs() {
       );
     }
 
-    if (anomalyFilter === "Anomaly") {
+    if (statusFilter === "Anomaly") {
       result = result.filter(
         (log) => log.is_anomaly === true
       );
     }
 
-    if (anomalyFilter === "Normal") {
+    if (statusFilter === "Normal") {
       result = result.filter(
         (log) => log.is_anomaly !== true
       );
@@ -127,8 +162,28 @@ function ActivityLogs() {
   const formatDate = (date) => {
     if (!date) return "-";
 
-    return new Date(date).toLocaleString();
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return String(date);
+    }
+
+    return parsedDate.toLocaleString();
   };
+
+  const totalActivities = logs.length;
+
+  const loginActivities = logs.filter(
+    (log) => log.log_type === "Login"
+  ).length;
+
+  const fileAccessEvents = logs.filter(
+    (log) => log.log_type === "File Access"
+  ).length;
+
+  const anomalies = logs.filter(
+    (log) => log.is_anomaly === true
+  ).length;
 
   if (loading) {
     return (
@@ -142,11 +197,15 @@ function ActivityLogs() {
 
   return (
     <div className="activity-logs-page">
+
+      {/* HEADER */}
+
       <div className="activity-header">
         <div>
           <h1>Activity Logs</h1>
+
           <p>
-            Monitor login and file access activities
+            Monitor employee login and file access activities
           </p>
         </div>
 
@@ -159,6 +218,8 @@ function ActivityLogs() {
         </button>
       </div>
 
+      {/* ERROR */}
+
       {error && (
         <div className="activity-error">
           <span>{error}</span>
@@ -169,7 +230,10 @@ function ActivityLogs() {
         </div>
       )}
 
+      {/* SUMMARY */}
+
       <div className="activity-summary">
+
         <div className="activity-summary-card">
           <div className="activity-summary-icon">
             <Activity size={22} />
@@ -177,7 +241,9 @@ function ActivityLogs() {
 
           <div>
             <span>Total Activities</span>
-            <strong>{logs.length}</strong>
+            <strong>
+              {totalActivities}
+            </strong>
           </div>
         </div>
 
@@ -189,55 +255,47 @@ function ActivityLogs() {
           <div>
             <span>Login Activities</span>
             <strong>
-              {
-                logs.filter(
-                  (log) =>
-                    log.log_type === "Login"
-                ).length
-              }
+              {loginActivities}
             </strong>
           </div>
         </div>
 
         <div className="activity-summary-card">
           <div className="activity-summary-icon file">
-            <Calendar size={22} />
+            <FileText size={22} />
           </div>
 
           <div>
             <span>File Access Events</span>
             <strong>
-              {
-                logs.filter(
-                  (log) =>
-                    log.log_type === "File Access"
-                ).length
-              }
+              {fileAccessEvents}
             </strong>
           </div>
         </div>
 
         <div className="activity-summary-card">
           <div className="activity-summary-icon anomaly">
-            <Activity size={22} />
+            <AlertTriangle size={22} />
           </div>
 
           <div>
             <span>Anomalies</span>
             <strong>
-              {
-                logs.filter(
-                  (log) =>
-                    log.is_anomaly === true
-                ).length
-              }
+              {anomalies}
             </strong>
           </div>
         </div>
+
       </div>
 
+      {/* CONTENT */}
+
       <div className="activity-content">
+
+        {/* FILTERS */}
+
         <div className="activity-toolbar">
+
           <div className="activity-search">
             <Search size={18} />
 
@@ -271,9 +329,9 @@ function ActivityLogs() {
           </select>
 
           <select
-            value={anomalyFilter}
+            value={statusFilter}
             onChange={(event) =>
-              setAnomalyFilter(event.target.value)
+              setStatusFilter(event.target.value)
             }
           >
             <option value="All">
@@ -288,19 +346,31 @@ function ActivityLogs() {
               Normal
             </option>
           </select>
+
         </div>
 
+        {/* TABLE */}
+
         {filteredLogs.length === 0 ? (
+
           <div className="activity-empty">
             <Activity size={44} />
-            <h3>No activity logs found</h3>
+
+            <h3>
+              No activity logs found
+            </h3>
+
             <p>
               No activities match the current filters.
             </p>
           </div>
+
         ) : (
+
           <div className="activity-table-wrapper">
+
             <table className="activity-table">
+
               <thead>
                 <tr>
                   <th>Type</th>
@@ -315,10 +385,13 @@ function ActivityLogs() {
               </thead>
 
               <tbody>
+
                 {filteredLogs.map((log, index) => (
+
                   <tr
                     key={`${log.log_type}-${log.id}-${index}`}
                   >
+
                     <td>
                       <span
                         className={`activity-type ${
@@ -333,19 +406,17 @@ function ActivityLogs() {
 
                     <td>
                       <strong>
-                        {log.username || "-"}
+                        {log.username}
                       </strong>
                     </td>
 
                     <td>
-                      {log.pc || "-"}
+                      {log.device}
                     </td>
 
                     <td>
                       <span className="activity-event">
-                        {log.log_type === "Login"
-                          ? log.activity || "-"
-                          : log.filename || "-"}
+                        {log.event}
                       </span>
                     </td>
 
@@ -361,9 +432,17 @@ function ActivityLogs() {
                             : "normal"
                         }`}
                       >
-                        {log.is_anomaly
-                          ? "Anomaly"
-                          : "Normal"}
+                        {log.is_anomaly ? (
+                          <>
+                            <AlertTriangle size={13} />
+                            Anomaly
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={13} />
+                            Normal
+                          </>
+                        )}
                       </span>
                     </td>
 
@@ -380,31 +459,45 @@ function ActivityLogs() {
                           setSelectedLog(log)
                         }
                       >
+                        <Eye size={15} />
                         View
                       </button>
                     </td>
+
                   </tr>
+
                 ))}
+
               </tbody>
+
             </table>
+
           </div>
+
         )}
+
       </div>
 
+      {/* DETAILS MODAL */}
+
       {selectedLog && (
+
         <div
           className="activity-modal-overlay"
           onClick={() =>
             setSelectedLog(null)
           }
         >
+
           <div
             className="activity-modal"
             onClick={(event) =>
               event.stopPropagation()
             }
           >
+
             <div className="activity-modal-header">
+
               <div>
                 <h2>
                   Activity Details
@@ -422,42 +515,48 @@ function ActivityLogs() {
               >
                 <X size={20} />
               </button>
+
             </div>
 
             <div className="activity-modal-body">
+
               <div className="activity-details-grid">
+
                 <div>
                   <span>User</span>
+
                   <strong>
-                    {selectedLog.username || "-"}
+                    {selectedLog.username}
                   </strong>
                 </div>
 
                 <div>
                   <span>Device</span>
+
                   <strong>
-                    {selectedLog.pc || "-"}
+                    {selectedLog.device}
                   </strong>
                 </div>
 
                 <div>
                   <span>Activity Type</span>
+
                   <strong>
                     {selectedLog.log_type}
                   </strong>
                 </div>
 
                 <div>
-                  <span>Activity</span>
+                  <span>Activity / File</span>
+
                   <strong>
-                    {selectedLog.activity ||
-                      selectedLog.filename ||
-                      "-"}
+                    {selectedLog.event}
                   </strong>
                 </div>
 
                 <div>
                   <span>Date & Time</span>
+
                   <strong>
                     {formatDate(
                       selectedLog.event_time
@@ -467,13 +566,17 @@ function ActivityLogs() {
 
                 <div>
                   <span>Anomaly Score</span>
+
                   <strong>
-                    {selectedLog.anomaly_score || 0}
+                    {Number(
+                      selectedLog.anomaly_score || 0
+                    ).toFixed(2)}
                   </strong>
                 </div>
 
                 <div>
                   <span>Status</span>
+
                   <strong>
                     {selectedLog.is_anomaly
                       ? "Anomaly"
@@ -483,15 +586,22 @@ function ActivityLogs() {
 
                 <div>
                   <span>IP Address</span>
+
                   <strong>
                     {selectedLog.ip_address || "-"}
                   </strong>
                 </div>
+
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 }

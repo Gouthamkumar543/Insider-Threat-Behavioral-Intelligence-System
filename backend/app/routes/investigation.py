@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.models.models import Investigation
-from app.schemas.investigation import (
-    InvestigationCreate,
-    InvestigationUpdate,
-    InvestigationResponse
+from app.models.models import (
+    Employee,
+    LoginActivity,
+    FileAccess
 )
 
 router = APIRouter(
@@ -15,170 +14,173 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/",
-    response_model=list[InvestigationResponse]
-)
+@router.get("/")
 def get_investigations(
     db: Session = Depends(get_db)
 ):
-    return db.query(
-        Investigation
-    ).order_by(
-        Investigation.created_at.desc()
-    ).all()
+    employees = (
+        db.query(Employee)
+        .filter(
+            Employee.risk_level.in_(
+                ["High", "Critical"]
+            )
+        )
+        .order_by(
+            Employee.risk_score.desc()
+        )
+        .all()
+    )
+
+    investigations = []
+
+    for employee in employees:
+
+        login_count = (
+            db.query(LoginActivity)
+            .filter(
+                LoginActivity.employee_id
+                == employee.id
+            )
+            .count()
+        )
+
+        file_count = (
+            db.query(FileAccess)
+            .filter(
+                FileAccess.employee_id
+                == employee.id
+            )
+            .count()
+        )
+
+        if employee.risk_level == "Critical":
+            status = "Critical"
+        else:
+            status = "Open"
+
+        investigations.append(
+            {
+                "id": employee.id,
+                "employee_id": employee.id,
+                "user": employee.user,
+                "name": (
+                    employee.name
+                    or employee.user
+                ),
+                "risk_score": (
+                    employee.risk_score
+                    or 0
+                ),
+                "risk_level": (
+                    employee.risk_level
+                    or "Low"
+                ),
+                "anomaly_score": (
+                    employee.anomaly_score
+                    or 0
+                ),
+                "login_activities": login_count,
+                "file_access_events": file_count,
+                "status": status,
+                "priority": (
+                    employee.risk_level
+                ),
+                "description": (
+                    f"Behavioral investigation "
+                    f"required for {employee.user}"
+                )
+            }
+        )
+
+    return investigations
 
 
-@router.get(
-    "/{investigation_id}",
-    response_model=InvestigationResponse
-)
+@router.get("/{employee_id}")
 def get_investigation(
-    investigation_id: int,
+    employee_id: int,
     db: Session = Depends(get_db)
 ):
-    investigation = db.query(
-        Investigation
-    ).filter(
-        Investigation.id == investigation_id
-    ).first()
-
-    if not investigation:
-        raise HTTPException(
-            status_code=404,
-            detail="Investigation not found"
+    employee = (
+        db.query(Employee)
+        .filter(
+            Employee.id == employee_id
         )
-
-    return investigation
-
-
-@router.post(
-    "/",
-    response_model=InvestigationResponse
-)
-def create_investigation(
-    request: InvestigationCreate,
-    db: Session = Depends(get_db)
-):
-    investigation = Investigation(
-        employee_id=request.employee_id,
-        title=request.title,
-        description=request.description,
-        priority=request.priority,
-        assigned_to=request.assigned_to,
-        status="Open"
+        .first()
     )
 
-    db.add(investigation)
-    db.commit()
-    db.refresh(investigation)
+    if not employee:
+        return {
+            "error": "Employee not found"
+        }
 
-    return investigation
-
-
-@router.put(
-    "/{investigation_id}",
-    response_model=InvestigationResponse
-)
-def update_investigation(
-    investigation_id: int,
-    request: InvestigationUpdate,
-    db: Session = Depends(get_db)
-):
-    investigation = db.query(
-        Investigation
-    ).filter(
-        Investigation.id == investigation_id
-    ).first()
-
-    if not investigation:
-        raise HTTPException(
-            status_code=404,
-            detail="Investigation not found"
+    login_activities = (
+        db.query(LoginActivity)
+        .filter(
+            LoginActivity.employee_id
+            == employee.id
         )
-
-    update_data = request.model_dump(
-        exclude_unset=True
+        .order_by(
+            LoginActivity.login_time.desc()
+        )
+        .limit(100)
+        .all()
     )
 
-    for key, value in update_data.items():
-        setattr(
-            investigation,
-            key,
-            value
+    file_access = (
+        db.query(FileAccess)
+        .filter(
+            FileAccess.employee_id
+            == employee.id
         )
-
-    db.commit()
-    db.refresh(investigation)
-
-    return investigation
-
-
-@router.delete(
-    "/{investigation_id}"
-)
-def delete_investigation(
-    investigation_id: int,
-    db: Session = Depends(get_db)
-):
-    investigation = db.query(
-        Investigation
-    ).filter(
-        Investigation.id == investigation_id
-    ).first()
-
-    if not investigation:
-        raise HTTPException(
-            status_code=404,
-            detail="Investigation not found"
+        .order_by(
+            FileAccess.access_time.desc()
         )
-
-    db.delete(investigation)
-    db.commit()
+        .limit(100)
+        .all()
+    )
 
     return {
-        "message": "Investigation deleted successfully"
-    }
-
-
-@router.get(
-    "/summary/counts"
-)
-def investigation_summary(
-    db: Session = Depends(get_db)
-):
-    investigations = db.query(
-        Investigation
-    ).all()
-
-    return {
-        "total": len(investigations),
-        "open": sum(
-            1 for item in investigations
-            if item.status == "Open"
-        ),
-        "in_progress": sum(
-            1 for item in investigations
-            if item.status == "In Progress"
-        ),
-        "closed": sum(
-            1 for item in investigations
-            if item.status == "Closed"
-        ),
-        "critical": sum(
-            1 for item in investigations
-            if item.priority == "Critical"
-        ),
-        "high": sum(
-            1 for item in investigations
-            if item.priority == "High"
-        ),
-        "medium": sum(
-            1 for item in investigations
-            if item.priority == "Medium"
-        ),
-        "low": sum(
-            1 for item in investigations
-            if item.priority == "Low"
-        )
+        "employee": {
+            "id": employee.id,
+            "user": employee.user,
+            "name": (
+                employee.name
+                or employee.user
+            ),
+            "risk_score": (
+                employee.risk_score
+                or 0
+            ),
+            "risk_level": (
+                employee.risk_level
+                or "Low"
+            ),
+            "anomaly_score": (
+                employee.anomaly_score
+                or 0
+            )
+        },
+        "login_activities": [
+            {
+                "id": activity.id,
+                "activity": activity.activity,
+                "pc": activity.pc,
+                "timestamp": activity.login_time,
+                "is_anomaly": activity.is_anomaly,
+                "anomaly_score": activity.anomaly_score
+            }
+            for activity in login_activities
+        ],
+        "file_access": [
+            {
+                "id": access.id,
+                "filename": access.filename,
+                "pc": access.pc,
+                "action": access.action,
+                "timestamp": access.access_time,
+                "is_anomaly": access.is_anomaly,
+                "anomaly_score": access.anomaly_score
+            }
+            for access in file_access
+        ]
     }

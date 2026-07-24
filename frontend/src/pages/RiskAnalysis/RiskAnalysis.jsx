@@ -17,6 +17,7 @@ const API_URL = "http://127.0.0.1:8000";
 function RiskAnalysis() {
   const [riskUsers, setRiskUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
+
   const [summary, setSummary] = useState({
     total_users: 0,
     total_anomalies: 0,
@@ -48,16 +49,65 @@ function RiskAnalysis() {
 
       const [resultsResponse, summaryResponse] =
         await Promise.all([
-          axios.get(`${API_URL}/anomaly/results`),
-          axios.get(`${API_URL}/anomaly/summary`)
+          axios.get(`${API_URL}/risk/top`),
+          axios.get(`${API_URL}/risk/summary`)
         ]);
 
-      const results = Array.isArray(resultsResponse.data)
+      const results = Array.isArray(
+        resultsResponse.data
+      )
         ? resultsResponse.data
-        : resultsResponse.data.results || [];
+        : [];
 
-      setRiskUsers(results);
-      setSummary(summaryResponse.data);
+      const backendSummary =
+        summaryResponse.data;
+
+      const distribution =
+        backendSummary.riskDistribution || {
+          critical: 0,
+          high: 0,
+          medium: 0,
+          low: 0
+        };
+
+      const totalUsers =
+        backendSummary.totalEmployees || 0;
+
+      const totalAnomalies =
+        distribution.critical +
+        distribution.high;
+
+      const formattedUsers = results.map(
+        (user) => ({
+          id: user.id,
+          user: user.user,
+          risk_score: user.riskScore || 0,
+          risk_level: user.riskLevel || "Low",
+          anomaly_score:
+            user.anomalyScore || 0,
+          anomaly:
+            user.riskLevel === "High" ||
+            user.riskLevel === "Critical"
+              ? 1
+              : 0,
+          login_count:
+            user.login_count || 0,
+          unique_devices:
+            user.unique_devices || 0,
+          after_hours_logins:
+            user.after_hours_logins || 0,
+          weekend_logins:
+            user.weekend_logins || 0
+        })
+      );
+
+      setRiskUsers(formattedUsers);
+
+      setSummary({
+        total_users: totalUsers,
+        total_anomalies: totalAnomalies,
+        risk_distribution: distribution
+      });
     } catch (err) {
       setError(
         err.response?.data?.detail ||
@@ -94,7 +144,9 @@ function RiskAnalysis() {
   };
 
   const getRiskClass = (level) => {
-    return String(level || "Low").toLowerCase();
+    return String(
+      level || "Low"
+    ).toLowerCase();
   };
 
   const getScoreClass = (score) => {
@@ -151,7 +203,10 @@ function RiskAnalysis() {
 
           <div>
             <span>Analyzed Users</span>
-            <strong>{summary.total_users || 0}</strong>
+
+            <strong>
+              {summary.total_users || 0}
+            </strong>
           </div>
         </div>
 
@@ -162,6 +217,7 @@ function RiskAnalysis() {
 
           <div>
             <span>Detected Anomalies</span>
+
             <strong>
               {summary.total_anomalies || 0}
             </strong>
@@ -175,6 +231,7 @@ function RiskAnalysis() {
 
           <div>
             <span>Critical Risk</span>
+
             <strong>
               {summary.risk_distribution?.critical || 0}
             </strong>
@@ -188,6 +245,7 @@ function RiskAnalysis() {
 
           <div>
             <span>High Risk</span>
+
             <strong>
               {summary.risk_distribution?.high || 0}
             </strong>
@@ -199,6 +257,7 @@ function RiskAnalysis() {
         <div className="risk-card-heading">
           <div>
             <h2>Risk Distribution</h2>
+
             <p>
               Distribution of employees by calculated risk level
             </p>
@@ -211,6 +270,7 @@ function RiskAnalysis() {
           <div className="distribution-item critical">
             <div className="distribution-label">
               <span>Critical</span>
+
               <strong>
                 {summary.risk_distribution?.critical || 0}
               </strong>
@@ -221,8 +281,10 @@ function RiskAnalysis() {
                 style={{
                   width: `${
                     summary.total_users
-                      ? (summary.risk_distribution.critical /
-                          summary.total_users) *
+                      ? (
+                          summary.risk_distribution.critical /
+                          summary.total_users
+                        ) *
                         100
                       : 0
                   }%`
@@ -234,6 +296,7 @@ function RiskAnalysis() {
           <div className="distribution-item high">
             <div className="distribution-label">
               <span>High</span>
+
               <strong>
                 {summary.risk_distribution?.high || 0}
               </strong>
@@ -244,8 +307,10 @@ function RiskAnalysis() {
                 style={{
                   width: `${
                     summary.total_users
-                      ? (summary.risk_distribution.high /
-                          summary.total_users) *
+                      ? (
+                          summary.risk_distribution.high /
+                          summary.total_users
+                        ) *
                         100
                       : 0
                   }%`
@@ -257,6 +322,7 @@ function RiskAnalysis() {
           <div className="distribution-item medium">
             <div className="distribution-label">
               <span>Medium</span>
+
               <strong>
                 {summary.risk_distribution?.medium || 0}
               </strong>
@@ -267,8 +333,10 @@ function RiskAnalysis() {
                 style={{
                   width: `${
                     summary.total_users
-                      ? (summary.risk_distribution.medium /
-                          summary.total_users) *
+                      ? (
+                          summary.risk_distribution.medium /
+                          summary.total_users
+                        ) *
                         100
                       : 0
                   }%`
@@ -280,6 +348,7 @@ function RiskAnalysis() {
           <div className="distribution-item low">
             <div className="distribution-label">
               <span>Low</span>
+
               <strong>
                 {summary.risk_distribution?.low || 0}
               </strong>
@@ -290,8 +359,10 @@ function RiskAnalysis() {
                 style={{
                   width: `${
                     summary.total_users
-                      ? (summary.risk_distribution.low /
-                          summary.total_users) *
+                      ? (
+                          summary.risk_distribution.low /
+                          summary.total_users
+                        ) *
                         100
                       : 0
                   }%`
@@ -306,6 +377,7 @@ function RiskAnalysis() {
         <div className="risk-table-toolbar">
           <div>
             <h2>User Risk Analysis</h2>
+
             <p>
               Behavioral risk scores generated by the anomaly detection engine
             </p>
@@ -357,7 +429,11 @@ function RiskAnalysis() {
         {filteredUsers.length === 0 ? (
           <div className="risk-empty">
             <ShieldAlert size={44} />
-            <h3>No risk data found</h3>
+
+            <h3>
+              No risk data found
+            </h3>
+
             <p>
               No users match the selected filters.
             </p>
@@ -382,7 +458,12 @@ function RiskAnalysis() {
 
               <tbody>
                 {filteredUsers.map((user) => (
-                  <tr key={user.id || user.user}>
+                  <tr
+                    key={
+                      user.id ||
+                      user.user
+                    }
+                  >
                     <td>
                       <div className="risk-user">
                         <div className="risk-user-avatar">
@@ -394,7 +475,8 @@ function RiskAnalysis() {
                         </div>
 
                         <strong>
-                          {user.user || "Unknown User"}
+                          {user.user ||
+                            "Unknown User"}
                         </strong>
                       </div>
                     </td>
@@ -433,7 +515,8 @@ function RiskAnalysis() {
                           user.risk_level
                         )}`}
                       >
-                        {user.risk_level || "Low"}
+                        {user.risk_level ||
+                          "Low"}
                       </span>
                     </td>
 

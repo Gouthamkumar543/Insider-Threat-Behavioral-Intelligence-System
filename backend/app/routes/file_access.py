@@ -14,17 +14,22 @@ router = APIRouter(
 def get_file_access(
     db: Session = Depends(get_db)
 ):
-    activities = db.query(
-        FileAccess
-    ).order_by(
-        FileAccess.access_time.desc()
-    ).limit(1000).all()
+    activities = (
+        db.query(FileAccess)
+        .order_by(FileAccess.access_time.desc())
+        .limit(1000)
+        .all()
+    )
 
     return [
         {
             "id": activity.id,
             "employee_id": activity.employee_id,
-            "username": activity.username,
+
+            # FileAccess model uses "user"
+            # Frontend expects "username"
+            "username": activity.user,
+
             "pc": activity.pc,
             "filename": activity.filename,
             "content": activity.content,
@@ -41,19 +46,19 @@ def get_file_access(
 def get_file_access_anomalies(
     db: Session = Depends(get_db)
 ):
-    activities = db.query(
-        FileAccess
-    ).filter(
-        FileAccess.is_anomaly == True
-    ).order_by(
-        FileAccess.anomaly_score.desc()
-    ).limit(1000).all()
+    activities = (
+        db.query(FileAccess)
+        .filter(FileAccess.is_anomaly == True)
+        .order_by(FileAccess.anomaly_score.desc())
+        .limit(1000)
+        .all()
+    )
 
     return [
         {
             "id": activity.id,
             "employee_id": activity.employee_id,
-            "username": activity.username,
+            "username": activity.user,
             "pc": activity.pc,
             "filename": activity.filename,
             "access_time": activity.access_time,
@@ -69,22 +74,22 @@ def get_single_file_access(
     access_id: int,
     db: Session = Depends(get_db)
 ):
-    activity = db.query(
-        FileAccess
-    ).filter(
-        FileAccess.id == access_id
-    ).first()
+    activity = (
+        db.query(FileAccess)
+        .filter(FileAccess.id == access_id)
+        .first()
+    )
 
     if not activity:
         raise HTTPException(
             status_code=404,
-            detail="File access record not found"
+            detail="File access activity not found"
         )
 
     return {
         "id": activity.id,
         "employee_id": activity.employee_id,
-        "username": activity.username,
+        "username": activity.user,
         "pc": activity.pc,
         "filename": activity.filename,
         "content": activity.content,

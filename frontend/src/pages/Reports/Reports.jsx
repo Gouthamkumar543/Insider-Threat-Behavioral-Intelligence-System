@@ -47,19 +47,58 @@ function Reports() {
       setLoading(true);
       setError("");
 
-      const [summaryResponse, riskResponse] =
-        await Promise.all([
-          axios.get(`${API_URL}/anomaly/summary`),
-          axios.get(`${API_URL}/anomaly/top-risk`)
-        ]);
+      const [
+        summaryResponse,
+        riskResponse
+      ] = await Promise.all([
+        axios.get(`${API_URL}/risk/summary`),
+        axios.get(`${API_URL}/risk/top`)
+      ]);
 
-      setSummary(summaryResponse.data);
+      const backendSummary =
+        summaryResponse.data;
 
-      const users = Array.isArray(riskResponse.data)
+      const distribution =
+        backendSummary.riskDistribution || {
+          critical: 0,
+          high: 0,
+          medium: 0,
+          low: 0
+        };
+
+      const totalUsers =
+        backendSummary.totalEmployees || 0;
+
+      const totalAnomalies =
+        distribution.critical +
+        distribution.high;
+
+      setSummary({
+        total_users: totalUsers,
+        total_anomalies: totalAnomalies,
+        risk_distribution: distribution
+      });
+
+      const users = Array.isArray(
+        riskResponse.data
+      )
         ? riskResponse.data
-        : riskResponse.data.results || [];
+        : [];
 
-      setRiskUsers(users);
+      const formattedUsers = users.map(
+        (user) => ({
+          id: user.id,
+          user: user.user,
+          risk_score:
+            user.riskScore || 0,
+          risk_level:
+            user.riskLevel || "Low",
+          anomaly_score:
+            user.anomalyScore || 0
+        })
+      );
+
+      setRiskUsers(formattedUsers);
     } catch (err) {
       setError(
         err.response?.data?.detail ||
@@ -70,20 +109,28 @@ function Reports() {
     }
   };
 
-  const filteredUsers = riskUsers.filter((user) =>
-    String(user.user || "")
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const filteredUsers = riskUsers.filter(
+    (user) =>
+      String(user.user || "")
+        .toLowerCase()
+        .includes(search.toLowerCase())
   );
 
-  const totalUsers = summary.total_users || 0;
-  const totalAnomalies = summary.total_anomalies || 0;
+  const totalUsers =
+    summary.total_users || 0;
+
+  const totalAnomalies =
+    summary.total_anomalies || 0;
+
   const critical =
     summary.risk_distribution?.critical || 0;
+
   const high =
     summary.risk_distribution?.high || 0;
+
   const medium =
     summary.risk_distribution?.medium || 0;
+
   const low =
     summary.risk_distribution?.low || 0;
 
@@ -108,25 +155,39 @@ TOP RISK USERS
 ${riskUsers
   .map(
     (user, index) =>
-      `${index + 1}. ${user.user || "Unknown"} | Risk Score: ${
+      `${index + 1}. ${
+        user.user || "Unknown"
+      } | Risk Score: ${
         user.risk_score || 0
-      } | Risk Level: ${user.risk_level || "Unknown"}`
+      } | Risk Level: ${
+        user.risk_level || "Unknown"
+      }`
   )
   .join("\n")}
 `;
 
-    const blob = new Blob([reportContent], {
-      type: "text/plain"
-    });
+    const blob = new Blob(
+      [reportContent],
+      {
+        type: "text/plain"
+      }
+    );
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
 
     link.href = url;
-    link.download = `insider-ai-report-${Date.now()}.txt`;
+
+    link.download =
+      `insider-ai-report-${Date.now()}.txt`;
 
     document.body.appendChild(link);
+
     link.click();
+
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
@@ -147,6 +208,7 @@ ${riskUsers
       <div className="reports-header">
         <div>
           <h1>Reports</h1>
+
           <p>
             Generate and review security intelligence reports
           </p>
@@ -157,6 +219,7 @@ ${riskUsers
           onClick={loadReportData}
         >
           <RefreshCw size={16} />
+
           Refresh
         </button>
       </div>
@@ -174,7 +237,10 @@ ${riskUsers
           </div>
 
           <div>
-            <h2>Generate Security Report</h2>
+            <h2>
+              Generate Security Report
+            </h2>
+
             <p>
               Select your report configuration and generate a report
             </p>
@@ -183,12 +249,16 @@ ${riskUsers
 
         <div className="report-generator-form">
           <div className="report-form-group">
-            <label>Report Type</label>
+            <label>
+              Report Type
+            </label>
 
             <select
               value={reportType}
               onChange={(event) =>
-                setReportType(event.target.value)
+                setReportType(
+                  event.target.value
+                )
               }
             >
               <option>
@@ -210,12 +280,16 @@ ${riskUsers
           </div>
 
           <div className="report-form-group">
-            <label>Date Range</label>
+            <label>
+              Date Range
+            </label>
 
             <select
               value={dateRange}
               onChange={(event) =>
-                setDateRange(event.target.value)
+                setDateRange(
+                  event.target.value
+                )
               }
             >
               <option>
@@ -241,6 +315,7 @@ ${riskUsers
             onClick={generateReport}
           >
             <Download size={17} />
+
             Generate Report
           </button>
         </div>
@@ -252,8 +327,13 @@ ${riskUsers
             <Users size={21} />
           </div>
 
-          <span>Analyzed Users</span>
-          <strong>{totalUsers}</strong>
+          <span>
+            Analyzed Users
+          </span>
+
+          <strong>
+            {totalUsers}
+          </strong>
         </div>
 
         <div className="report-summary-card">
@@ -261,8 +341,13 @@ ${riskUsers
             <Activity size={21} />
           </div>
 
-          <span>Total Anomalies</span>
-          <strong>{totalAnomalies}</strong>
+          <span>
+            Total Anomalies
+          </span>
+
+          <strong>
+            {totalAnomalies}
+          </strong>
         </div>
 
         <div className="report-summary-card">
@@ -270,8 +355,13 @@ ${riskUsers
             <ShieldAlert size={21} />
           </div>
 
-          <span>Critical Risk</span>
-          <strong>{critical}</strong>
+          <span>
+            Critical Risk
+          </span>
+
+          <strong>
+            {critical}
+          </strong>
         </div>
 
         <div className="report-summary-card">
@@ -279,8 +369,13 @@ ${riskUsers
             <BarChart3 size={21} />
           </div>
 
-          <span>High Risk</span>
-          <strong>{high}</strong>
+          <span>
+            High Risk
+          </span>
+
+          <strong>
+            {high}
+          </strong>
         </div>
       </div>
 
@@ -288,7 +383,10 @@ ${riskUsers
         <div className="report-distribution-card">
           <div className="report-section-heading">
             <div>
-              <h2>Risk Distribution</h2>
+              <h2>
+                Risk Distribution
+              </h2>
+
               <p>
                 Current distribution of behavioral risk levels
               </p>
@@ -304,34 +402,49 @@ ${riskUsers
                 background: `conic-gradient(
                   #dc2626 0% ${
                     totalUsers
-                      ? (critical / totalUsers) * 100
-                      : 0
-                  }%,
-                  #ea580c ${
-                    totalUsers
-                      ? (critical / totalUsers) * 100
-                      : 0
-                  }% ${
-                    totalUsers
-                      ? ((critical + high) / totalUsers) *
-                        100
-                      : 0
-                  }%,
-                  #d97706 ${
-                    totalUsers
-                      ? ((critical + high) / totalUsers) *
-                        100
-                      : 0
-                  }% ${
-                    totalUsers
-                      ? ((critical + high + medium) /
+                      ? (critical /
                           totalUsers) *
                         100
                       : 0
                   }%,
+
+                  #ea580c ${
+                    totalUsers
+                      ? (critical /
+                          totalUsers) *
+                        100
+                      : 0
+                  }% ${
+                    totalUsers
+                      ? ((critical +
+                          high) /
+                          totalUsers) *
+                        100
+                      : 0
+                  }%,
+
+                  #d97706 ${
+                    totalUsers
+                      ? ((critical +
+                          high) /
+                          totalUsers) *
+                        100
+                      : 0
+                  }% ${
+                    totalUsers
+                      ? ((critical +
+                          high +
+                          medium) /
+                          totalUsers) *
+                        100
+                      : 0
+                  }%,
+
                   #16a34a ${
                     totalUsers
-                      ? ((critical + high + medium) /
+                      ? ((critical +
+                          high +
+                          medium) /
                           totalUsers) *
                         100
                       : 0
@@ -340,8 +453,13 @@ ${riskUsers
               }}
             >
               <div className="risk-donut-center">
-                <strong>{totalUsers}</strong>
-                <span>Users</span>
+                <strong>
+                  {totalUsers}
+                </strong>
+
+                <span>
+                  Users
+                </span>
               </div>
             </div>
           </div>
@@ -349,26 +467,50 @@ ${riskUsers
           <div className="report-legend">
             <div>
               <span className="legend-dot critical" />
-              <span>Critical</span>
-              <strong>{critical}</strong>
+
+              <span>
+                Critical
+              </span>
+
+              <strong>
+                {critical}
+              </strong>
             </div>
 
             <div>
               <span className="legend-dot high" />
-              <span>High</span>
-              <strong>{high}</strong>
+
+              <span>
+                High
+              </span>
+
+              <strong>
+                {high}
+              </strong>
             </div>
 
             <div>
               <span className="legend-dot medium" />
-              <span>Medium</span>
-              <strong>{medium}</strong>
+
+              <span>
+                Medium
+              </span>
+
+              <strong>
+                {medium}
+              </strong>
             </div>
 
             <div>
               <span className="legend-dot low" />
-              <span>Low</span>
-              <strong>{low}</strong>
+
+              <span>
+                Low
+              </span>
+
+              <strong>
+                {low}
+              </strong>
             </div>
           </div>
         </div>
@@ -376,7 +518,10 @@ ${riskUsers
         <div className="report-activity-card">
           <div className="report-section-heading">
             <div>
-              <h2>Report Overview</h2>
+              <h2>
+                Report Overview
+              </h2>
+
               <p>
                 Current security intelligence status
               </p>
@@ -387,24 +532,40 @@ ${riskUsers
 
           <div className="overview-list">
             <div className="overview-item">
-              <span>Report Type</span>
-              <strong>{reportType}</strong>
+              <span>
+                Report Type
+              </span>
+
+              <strong>
+                {reportType}
+              </strong>
             </div>
 
             <div className="overview-item">
-              <span>Selected Period</span>
-              <strong>{dateRange}</strong>
+              <span>
+                Selected Period
+              </span>
+
+              <strong>
+                {dateRange}
+              </strong>
             </div>
 
             <div className="overview-item">
-              <span>Detection Status</span>
+              <span>
+                Detection Status
+              </span>
+
               <strong className="active-status">
                 Active
               </strong>
             </div>
 
             <div className="overview-item">
-              <span>Last Updated</span>
+              <span>
+                Last Updated
+              </span>
+
               <strong>
                 {new Date().toLocaleDateString()}
               </strong>
@@ -416,7 +577,10 @@ ${riskUsers
       <div className="top-risk-report-card">
         <div className="top-risk-header">
           <div>
-            <h2>Top Risk Users</h2>
+            <h2>
+              Top Risk Users
+            </h2>
+
             <p>
               Users with the highest calculated behavioral risk
             </p>
@@ -429,7 +593,9 @@ ${riskUsers
               placeholder="Search user..."
               value={search}
               onChange={(event) =>
-                setSearch(event.target.value)
+                setSearch(
+                  event.target.value
+                )
               }
             />
           </div>
@@ -444,50 +610,79 @@ ${riskUsers
             <table className="top-risk-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>User</th>
-                  <th>Risk Score</th>
-                  <th>Risk Level</th>
-                  <th>Anomaly Score</th>
+                  <th>
+                    #
+                  </th>
+
+                  <th>
+                    User
+                  </th>
+
+                  <th>
+                    Risk Score
+                  </th>
+
+                  <th>
+                    Risk Level
+                  </th>
+
+                  <th>
+                    Anomaly Score
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {filteredUsers.map((user, index) => (
-                  <tr key={user.user || index}>
-                    <td>{index + 1}</td>
+                {filteredUsers.map(
+                  (user, index) => (
+                    <tr
+                      key={
+                        user.id ||
+                        user.user ||
+                        index
+                      }
+                    >
+                      <td>
+                        {index + 1}
+                      </td>
 
-                    <td>
-                      <strong>
-                        {user.user || "Unknown User"}
-                      </strong>
-                    </td>
+                      <td>
+                        <strong>
+                          {user.user ||
+                            "Unknown User"}
+                        </strong>
+                      </td>
 
-                    <td>
-                      <strong className="report-risk-score">
+                      <td>
+                        <strong className="report-risk-score">
+                          {Number(
+                            user.risk_score ||
+                              0
+                          ).toFixed(1)}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`report-risk-level ${String(
+                            user.risk_level ||
+                              "Low"
+                          ).toLowerCase()}`}
+                        >
+                          {user.risk_level ||
+                            "Low"}
+                        </span>
+                      </td>
+
+                      <td>
                         {Number(
-                          user.risk_score || 0
+                          user.anomaly_score ||
+                            0
                         ).toFixed(1)}
-                      </strong>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`report-risk-level ${String(
-                          user.risk_level || "Low"
-                        ).toLowerCase()}`}
-                      >
-                        {user.risk_level || "Low"}
-                      </span>
-                    </td>
-
-                    <td>
-                      {Number(
-                        user.anomaly_score || 0
-                      ).toFixed(1)}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           </div>

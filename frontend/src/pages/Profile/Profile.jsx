@@ -40,6 +40,7 @@ function Profile() {
   const loadProfile = async () => {
     try {
       setLoading(true);
+      setError("");
 
       const token = localStorage.getItem("token");
 
@@ -52,51 +53,78 @@ function Profile() {
         }
       );
 
+      const data = response.data;
+
       setProfile({
-        full_name: response.data.full_name || "",
-        email: response.data.email || "",
-        role: response.data.role || "",
-        created_at: response.data.created_at || ""
+        full_name:
+          data.full_name ||
+          data.name ||
+          "",
+        email: data.email || "",
+        role: data.role || "",
+        created_at:
+          data.created_at || ""
       });
     } catch (err) {
-      const storedUser = localStorage.getItem("user");
+      const storedUser =
+        localStorage.getItem("user");
 
       if (storedUser) {
         try {
-          const user = JSON.parse(storedUser);
+          const user =
+            JSON.parse(storedUser);
 
           setProfile({
-            full_name: user.full_name || user.name || "",
-            email: user.email || "",
-            role: user.role || "",
-            created_at: user.created_at || ""
+            full_name:
+              user.full_name ||
+              user.name ||
+              "",
+            email:
+              user.email || "",
+            role:
+              user.role || "",
+            created_at:
+              user.created_at || ""
           });
         } catch {
-          setError("Unable to load profile");
+          setError(
+            "Unable to load profile"
+          );
         }
       } else {
-        setError("Unable to load profile");
+        setError(
+          err.response?.data?.detail ||
+            "Unable to load profile"
+        );
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProfileChange = (event) => {
+  const handleProfileChange = (
+    event
+  ) => {
     setProfile({
       ...profile,
-      [event.target.name]: event.target.value
+      [event.target.name]:
+        event.target.value
     });
   };
 
-  const handlePasswordChange = (event) => {
+  const handlePasswordChange = (
+    event
+  ) => {
     setPasswordData({
       ...passwordData,
-      [event.target.name]: event.target.value
+      [event.target.name]:
+        event.target.value
     });
   };
 
-  const saveProfile = async (event) => {
+  const saveProfile = async (
+    event
+  ) => {
     event.preventDefault();
 
     try {
@@ -104,35 +132,49 @@ function Profile() {
       setMessage("");
       setError("");
 
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem(
+          "token"
+        );
 
       await axios.put(
         `${API_URL}/auth/profile`,
         {
-          full_name: profile.full_name
+          full_name:
+            profile.full_name
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization:
+              `Bearer ${token}`
           }
         }
       );
 
-      const storedUser = localStorage.getItem("user");
+      const storedUser =
+        localStorage.getItem(
+          "user"
+        );
 
       if (storedUser) {
-        const user = JSON.parse(storedUser);
+        const user =
+          JSON.parse(
+            storedUser
+          );
 
         localStorage.setItem(
           "user",
           JSON.stringify({
             ...user,
-            full_name: profile.full_name
+            full_name:
+              profile.full_name
           })
         );
       }
 
-      setMessage("Profile updated successfully");
+      setMessage(
+        "Profile updated successfully"
+      );
     } catch (err) {
       setError(
         err.response?.data?.detail ||
@@ -143,7 +185,9 @@ function Profile() {
     }
   };
 
-  const changePassword = async (event) => {
+  const changePassword = async (
+    event
+  ) => {
     event.preventDefault();
 
     setMessage("");
@@ -154,7 +198,9 @@ function Profile() {
       !passwordData.new_password ||
       !passwordData.confirm_password
     ) {
-      setError("Please fill all password fields");
+      setError(
+        "Please fill all password fields"
+      );
       return;
     }
 
@@ -162,11 +208,16 @@ function Profile() {
       passwordData.new_password !==
       passwordData.confirm_password
     ) {
-      setError("New passwords do not match");
+      setError(
+        "New passwords do not match"
+      );
       return;
     }
 
-    if (passwordData.new_password.length < 6) {
+    if (
+      passwordData.new_password.length <
+      6
+    ) {
       setError(
         "New password must contain at least 6 characters"
       );
@@ -176,19 +227,24 @@ function Profile() {
     try {
       setSaving(true);
 
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem(
+          "token"
+        );
 
       await axios.put(
         `${API_URL}/auth/change-password`,
         {
           current_password:
             passwordData.current_password,
+
           new_password:
             passwordData.new_password
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization:
+              `Bearer ${token}`
           }
         }
       );
@@ -199,7 +255,9 @@ function Profile() {
         confirm_password: ""
       });
 
-      setMessage("Password changed successfully");
+      setMessage(
+        "Password changed successfully"
+      );
     } catch (err) {
       setError(
         err.response?.data?.detail ||
@@ -224,7 +282,10 @@ function Profile() {
     <div className="profile-page">
       <div className="profile-header">
         <div>
-          <h1>My Profile</h1>
+          <h1>
+            My Profile
+          </h1>
+
           <p>
             Manage your account information and security
           </p>
@@ -234,6 +295,7 @@ function Profile() {
       {message && (
         <div className="profile-message success">
           <CheckCircle size={17} />
+
           {message}
         </div>
       )}
@@ -241,6 +303,7 @@ function Profile() {
       {error && (
         <div className="profile-message error">
           <AlertCircle size={17} />
+
           {error}
         </div>
       )}
@@ -251,7 +314,10 @@ function Profile() {
             {profile.full_name
               ? profile.full_name
                   .split(" ")
-                  .map((word) => word[0])
+                  .map(
+                    (word) =>
+                      word[0]
+                  )
                   .join("")
                   .slice(0, 2)
                   .toUpperCase()
@@ -259,22 +325,29 @@ function Profile() {
           </div>
 
           <h2>
-            {profile.full_name || "User"}
+            {profile.full_name ||
+              "User"}
           </h2>
 
           <p className="profile-email">
-            {profile.email || "No email available"}
+            {profile.email ||
+              "No email available"}
           </p>
 
           <span className="profile-role">
             <Shield size={14} />
-            {profile.role || "Security Analyst"}
+
+            {profile.role ||
+              "Security Analyst"}
           </span>
 
           <div className="profile-overview-details">
             <div>
               <Calendar size={16} />
-              <span>Account Member</span>
+
+              <span>
+                Account Member
+              </span>
             </div>
 
             <strong>
@@ -294,7 +367,10 @@ function Profile() {
             </div>
 
             <div>
-              <h2>Personal Information</h2>
+              <h2>
+                Personal Information
+              </h2>
+
               <p>
                 Update your personal account details
               </p>
@@ -303,10 +379,14 @@ function Profile() {
 
           <form
             className="profile-form"
-            onSubmit={saveProfile}
+            onSubmit={
+              saveProfile
+            }
           >
             <div className="profile-form-group">
-              <label>Full Name</label>
+              <label>
+                Full Name
+              </label>
 
               <div className="profile-input-wrapper">
                 <User size={17} />
@@ -314,22 +394,30 @@ function Profile() {
                 <input
                   type="text"
                   name="full_name"
-                  value={profile.full_name}
-                  onChange={handleProfileChange}
+                  value={
+                    profile.full_name
+                  }
+                  onChange={
+                    handleProfileChange
+                  }
                   required
                 />
               </div>
             </div>
 
             <div className="profile-form-group">
-              <label>Email Address</label>
+              <label>
+                Email Address
+              </label>
 
               <div className="profile-input-wrapper disabled">
                 <Mail size={17} />
 
                 <input
                   type="email"
-                  value={profile.email}
+                  value={
+                    profile.email
+                  }
                   disabled
                 />
               </div>
@@ -340,14 +428,18 @@ function Profile() {
             </div>
 
             <div className="profile-form-group">
-              <label>Role</label>
+              <label>
+                Role
+              </label>
 
               <div className="profile-input-wrapper disabled">
                 <Shield size={17} />
 
                 <input
                   type="text"
-                  value={profile.role}
+                  value={
+                    profile.role
+                  }
                   disabled
                 />
               </div>
@@ -359,6 +451,7 @@ function Profile() {
               disabled={saving}
             >
               <Save size={16} />
+
               {saving
                 ? "Saving..."
                 : "Save Changes"}
@@ -374,7 +467,10 @@ function Profile() {
           </div>
 
           <div>
-            <h2>Change Password</h2>
+            <h2>
+              Change Password
+            </h2>
+
             <p>
               Keep your account secure with a strong password
             </p>
@@ -383,10 +479,14 @@ function Profile() {
 
         <form
           className="password-form"
-          onSubmit={changePassword}
+          onSubmit={
+            changePassword
+          }
         >
           <div className="profile-form-group">
-            <label>Current Password</label>
+            <label>
+              Current Password
+            </label>
 
             <input
               type="password"
@@ -394,25 +494,35 @@ function Profile() {
               value={
                 passwordData.current_password
               }
-              onChange={handlePasswordChange}
+              onChange={
+                handlePasswordChange
+              }
               placeholder="Enter current password"
             />
           </div>
 
           <div className="profile-form-group">
-            <label>New Password</label>
+            <label>
+              New Password
+            </label>
 
             <input
               type="password"
               name="new_password"
-              value={passwordData.new_password}
-              onChange={handlePasswordChange}
+              value={
+                passwordData.new_password
+              }
+              onChange={
+                handlePasswordChange
+              }
               placeholder="Enter new password"
             />
           </div>
 
           <div className="profile-form-group">
-            <label>Confirm New Password</label>
+            <label>
+              Confirm New Password
+            </label>
 
             <input
               type="password"
@@ -420,7 +530,9 @@ function Profile() {
               value={
                 passwordData.confirm_password
               }
-              onChange={handlePasswordChange}
+              onChange={
+                handlePasswordChange
+              }
               placeholder="Confirm new password"
             />
           </div>
@@ -431,6 +543,7 @@ function Profile() {
             disabled={saving}
           >
             <Lock size={16} />
+
             Change Password
           </button>
         </form>

@@ -11,47 +11,62 @@ import {
 } from "lucide-react";
 import "./Settings.css";
 
+const defaultSettings = {
+  email_alerts: true,
+  critical_alerts: true,
+  anomaly_alerts: true,
+  weekly_reports: false,
+  auto_refresh: true,
+  refresh_interval: "30",
+  risk_threshold: "70"
+};
+
 function Settings() {
-  const [settings, setSettings] = useState({
-    email_alerts: true,
-    critical_alerts: true,
-    anomaly_alerts: true,
-    weekly_reports: false,
-    auto_refresh: true,
-    refresh_interval: "30",
-    risk_threshold: "70"
-  });
+  const [settings, setSettings] = useState(defaultSettings);
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem(
-      "insider_ai_settings"
-    );
+    try {
+      const savedSettings = localStorage.getItem(
+        "insider_ai_settings"
+      );
 
-    if (savedSettings) {
-      try {
-        setSettings(JSON.parse(savedSettings));
-      } catch {
-        localStorage.removeItem(
-          "insider_ai_settings"
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(
+          savedSettings
         );
+
+        setSettings({
+          ...defaultSettings,
+          ...parsedSettings
+        });
       }
+    } catch {
+      localStorage.removeItem(
+        "insider_ai_settings"
+      );
+
+      setSettings(defaultSettings);
     }
   }, []);
 
   const handleChange = (event) => {
-    const { name, value, type, checked } =
-      event.target;
+    const {
+      name,
+      value,
+      type,
+      checked
+    } = event.target;
 
-    setSettings({
-      ...settings,
+    setSettings((previousSettings) => ({
+      ...previousSettings,
       [name]:
         type === "checkbox"
           ? checked
           : value
-    });
+    }));
   };
 
   const saveSettings = (event) => {
@@ -63,28 +78,31 @@ function Settings() {
         JSON.stringify(settings)
       );
 
+      window.dispatchEvent(
+        new CustomEvent(
+          "insider-ai-settings-updated",
+          {
+            detail: settings
+          }
+        )
+      );
+
       setError("");
-      setMessage("Settings saved successfully");
+      setMessage(
+        "Settings saved successfully"
+      );
 
       setTimeout(() => {
         setMessage("");
       }, 3000);
     } catch {
-      setError("Unable to save settings");
+      setError(
+        "Unable to save settings"
+      );
     }
   };
 
   const resetSettings = () => {
-    const defaultSettings = {
-      email_alerts: true,
-      critical_alerts: true,
-      anomaly_alerts: true,
-      weekly_reports: false,
-      auto_refresh: true,
-      refresh_interval: "30",
-      risk_threshold: "70"
-    };
-
     setSettings(defaultSettings);
 
     localStorage.setItem(
@@ -92,7 +110,19 @@ function Settings() {
       JSON.stringify(defaultSettings)
     );
 
-    setMessage("Settings reset successfully");
+    window.dispatchEvent(
+      new CustomEvent(
+        "insider-ai-settings-updated",
+        {
+          detail: defaultSettings
+        }
+      )
+    );
+
+    setError("");
+    setMessage(
+      "Settings reset successfully"
+    );
 
     setTimeout(() => {
       setMessage("");
@@ -258,25 +288,11 @@ function Settings() {
                 value={settings.risk_threshold}
                 onChange={handleChange}
               >
-                <option value="50">
-                  50
-                </option>
-
-                <option value="60">
-                  60
-                </option>
-
-                <option value="70">
-                  70
-                </option>
-
-                <option value="80">
-                  80
-                </option>
-
-                <option value="90">
-                  90
-                </option>
+                <option value="50">50</option>
+                <option value="60">60</option>
+                <option value="70">70</option>
+                <option value="80">80</option>
+                <option value="90">90</option>
               </select>
 
               <span>
@@ -318,7 +334,10 @@ function Settings() {
 
             <div className="setting-option standalone">
               <div>
-                <strong>Enable Automatic Refresh</strong>
+                <strong>
+                  Enable Automatic Refresh
+                </strong>
+
                 <span>
                   Automatically update dashboard intelligence data
                 </span>
@@ -365,7 +384,9 @@ function Settings() {
 
             <div className="system-info-item">
               <span>Detection Engine</span>
-              <strong>Isolation Forest</strong>
+              <strong>
+                Isolation Forest
+              </strong>
             </div>
 
             <div className="system-info-item">

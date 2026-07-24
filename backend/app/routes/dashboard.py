@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from app.database.database import SessionLocal
+from app.database.database import get_db
 from app.models.models import Employee, LoginActivity, FileAccess
 
 router = APIRouter(
@@ -11,28 +10,11 @@ router = APIRouter(
 )
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @router.get("/summary")
 def dashboard_summary(db: Session = Depends(get_db)):
-
     total_employees = db.query(Employee).count()
-
     login_activities = db.query(LoginActivity).count()
-
     file_access_events = db.query(FileAccess).count()
-
-    total_anomalies = (
-        db.query(Employee)
-        .filter(Employee.anomaly == 1)
-        .count()
-    )
 
     critical_risk = (
         db.query(Employee)
@@ -58,6 +40,12 @@ def dashboard_summary(db: Session = Depends(get_db)):
         .count()
     )
 
+    total_anomalies = (
+        db.query(Employee)
+        .filter(Employee.anomaly == 1)
+        .count()
+    )
+
     top_risk_users = (
         db.query(Employee)
         .order_by(Employee.risk_score.desc())
@@ -70,6 +58,8 @@ def dashboard_summary(db: Session = Depends(get_db)):
             "totalEmployees": total_employees,
             "loginActivities": login_activities,
             "fileAccessEvents": file_access_events,
+            "deviceActivities": 0,
+            "emailActivities": 0,
             "totalAnomalies": total_anomalies,
             "criticalRisk": critical_risk,
             "highRisk": high_risk,
@@ -96,10 +86,7 @@ def dashboard_summary(db: Session = Depends(get_db)):
 
 
 @router.get("/top-risk")
-def top_risk_users(
-    db: Session = Depends(get_db)
-):
-
+def top_risk_users(db: Session = Depends(get_db)):
     employees = (
         db.query(Employee)
         .order_by(Employee.risk_score.desc())
