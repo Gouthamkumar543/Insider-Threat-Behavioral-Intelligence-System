@@ -6,114 +6,172 @@ sys.path.append(
     os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
-            ".."
+            "..",
+            "backend"
         )
     )
 )
 
-from app.database.database import (
-    engine,
-    SessionLocal,
-    Base
-)
-
-from app.models.models import AnomalyResult
+from app.database.database import SessionLocal
+from app.models.models import Employee
 
 
-BASE_DIR = os.path.dirname(
-    os.path.abspath(__file__)
-)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-INPUT_FILE = os.path.join(
+CSV_PATH = os.path.join(
     BASE_DIR,
     "processed",
     "anomaly_results.csv"
 )
 
 
-print("Creating database tables...")
+def clean_value(value, default=None):
 
-Base.metadata.create_all(
-    bind=engine
-)
+    if pd.isna(value):
+        return default
 
-print("Loading anomaly results...")
+    return value
 
-df = pd.read_csv(INPUT_FILE)
 
-print(
-    f"Records found: {len(df)}"
-)
+def main():
 
-db = SessionLocal()
+    if not os.path.exists(CSV_PATH):
 
-try:
+        print(f"File not found: {CSV_PATH}")
 
-    db.query(AnomalyResult).delete()
+        return
 
-    for _, row in df.iterrows():
+    df = pd.read_csv(CSV_PATH)
 
-        result = AnomalyResult(
-            user=str(row["user"]),
-            login_count=int(
-                row["login_count"]
-            ),
-            unique_devices=int(
-                row["unique_devices"]
-            ),
-            after_hours_logins=int(
-                row["after_hours_logins"]
-            ),
-            weekend_logins=int(
-                row["weekend_logins"]
-            ),
-            after_hours_ratio=float(
-                row["after_hours_ratio"]
-            ),
-            weekend_ratio=float(
-                row["weekend_ratio"]
-            ),
-            anomaly_prediction=int(
-                row["anomaly_prediction"]
-            ),
-            anomaly_score=float(
-                row["anomaly_score"]
-            ),
-            anomaly=int(
-                row["anomaly"]
-            ),
-            risk_score=float(
-                row["risk_score"]
-            ),
-            risk_level=str(
-                row["risk_level"]
+    db = SessionLocal()
+
+    try:
+
+        db.query(Employee).delete()
+
+        db.commit()
+
+        for _, row in df.iterrows():
+
+            user = str(
+                clean_value(
+                    row.get("user"),
+                    ""
+                )
+            ).strip()
+
+            if not user:
+
+                continue
+
+            employee = Employee(
+
+                user=user,
+
+                name=user,
+
+                login_count=int(
+                    clean_value(
+                        row.get("login_count"),
+                        0
+                    )
+                ),
+
+                unique_devices=int(
+                    clean_value(
+                        row.get("unique_devices"),
+                        0
+                    )
+                ),
+
+                after_hours_logins=int(
+                    clean_value(
+                        row.get("after_hours_logins"),
+                        0
+                    )
+                ),
+
+                weekend_logins=int(
+                    clean_value(
+                        row.get("weekend_logins"),
+                        0
+                    )
+                ),
+
+                after_hours_ratio=float(
+                    clean_value(
+                        row.get("after_hours_ratio"),
+                        0
+                    )
+                ),
+
+                weekend_ratio=float(
+                    clean_value(
+                        row.get("weekend_ratio"),
+                        0
+                    )
+                ),
+
+                anomaly_prediction=int(
+                    clean_value(
+                        row.get("anomaly_prediction"),
+                        1
+                    )
+                ),
+
+                anomaly_score=float(
+                    clean_value(
+                        row.get("anomaly_score"),
+                        0
+                    )
+                ),
+
+                anomaly=int(
+                    clean_value(
+                        row.get("anomaly"),
+                        0
+                    )
+                ),
+
+                risk_score=float(
+                    clean_value(
+                        row.get("risk_score"),
+                        0
+                    )
+                ),
+
+                risk_level=str(
+                    clean_value(
+                        row.get("risk_level"),
+                        "Low"
+                    )
+                )
+
             )
+
+            db.add(employee)
+
+        db.commit()
+
+        total = db.query(Employee).count()
+
+        print(
+            f"Successfully imported {total} employees"
         )
 
-        db.add(result)
+    except Exception as error:
 
-    db.commit()
+        db.rollback()
 
-    print(
-        "Anomaly results imported successfully."
-    )
+        print(
+            f"Import failed: {error}"
+        )
 
-    total = db.query(
-        AnomalyResult
-    ).count()
+    finally:
 
-    print(
-        f"Database records: {total}"
-    )
+        db.close()
 
-except Exception as error:
 
-    db.rollback()
+if __name__ == "__main__":
 
-    print(
-        f"Import failed: {error}"
-    )
-
-finally:
-
-    db.close()
+    main()

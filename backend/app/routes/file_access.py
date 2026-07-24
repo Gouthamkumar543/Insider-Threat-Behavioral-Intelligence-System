@@ -1,53 +1,95 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database.database import SessionLocal
+from app.database.database import get_db
 from app.models.models import FileAccess
 
-
 router = APIRouter(
-    prefix="/files",
+    prefix="/file-access",
     tags=["File Access"]
 )
 
 
-# Database connection
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# Record file access activity
-@router.post("/")
-def create_file_access(
-    employee_id: str,
-    file_name: str,
-    action: str,
-    db: Session = Depends(get_db)
-):
-
-    file_activity = FileAccess(
-        employee_id=employee_id,
-        file_name=file_name,
-        action=action
-    )
-
-    db.add(file_activity)
-    db.commit()
-    db.refresh(file_activity)
-
-    return file_activity
-
-
-# Get all file activities
 @router.get("/")
 def get_file_access(
     db: Session = Depends(get_db)
 ):
+    activities = db.query(
+        FileAccess
+    ).order_by(
+        FileAccess.access_time.desc()
+    ).limit(1000).all()
 
-    files = db.query(FileAccess).all()
+    return [
+        {
+            "id": activity.id,
+            "employee_id": activity.employee_id,
+            "username": activity.username,
+            "pc": activity.pc,
+            "filename": activity.filename,
+            "content": activity.content,
+            "access_time": activity.access_time,
+            "action": activity.action,
+            "is_anomaly": activity.is_anomaly,
+            "anomaly_score": activity.anomaly_score
+        }
+        for activity in activities
+    ]
 
-    return files
+
+@router.get("/anomalies")
+def get_file_access_anomalies(
+    db: Session = Depends(get_db)
+):
+    activities = db.query(
+        FileAccess
+    ).filter(
+        FileAccess.is_anomaly == True
+    ).order_by(
+        FileAccess.anomaly_score.desc()
+    ).limit(1000).all()
+
+    return [
+        {
+            "id": activity.id,
+            "employee_id": activity.employee_id,
+            "username": activity.username,
+            "pc": activity.pc,
+            "filename": activity.filename,
+            "access_time": activity.access_time,
+            "action": activity.action,
+            "anomaly_score": activity.anomaly_score
+        }
+        for activity in activities
+    ]
+
+
+@router.get("/{access_id}")
+def get_single_file_access(
+    access_id: int,
+    db: Session = Depends(get_db)
+):
+    activity = db.query(
+        FileAccess
+    ).filter(
+        FileAccess.id == access_id
+    ).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="File access record not found"
+        )
+
+    return {
+        "id": activity.id,
+        "employee_id": activity.employee_id,
+        "username": activity.username,
+        "pc": activity.pc,
+        "filename": activity.filename,
+        "content": activity.content,
+        "access_time": activity.access_time,
+        "action": activity.action,
+        "is_anomaly": activity.is_anomaly,
+        "anomaly_score": activity.anomaly_score
+    }

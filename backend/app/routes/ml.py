@@ -1,7 +1,11 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from typing import List
 
-from app.services.ml_engine import predict_risk
+from app.services.ml_engine import (
+    predict_risk,
+    predict_anomaly
+)
 
 router = APIRouter(
     prefix="/ml",
@@ -9,21 +13,32 @@ router = APIRouter(
 )
 
 
-class EmployeeFeatures(BaseModel):
-    failed_logins: int
-    file_reads: int
-    file_writes: int
-    file_deletes: int
+class PredictionRequest(BaseModel):
+    features: List[float]
 
 
 @router.post("/predict")
-def predict(employee: EmployeeFeatures):
+def predict(
+    request: PredictionRequest
+):
+    return predict_risk(
+        request.features
+    )
 
-    features = [
-        employee.failed_logins,
-        employee.file_reads,
-        employee.file_writes,
-        employee.file_deletes
-    ]
 
-    return predict_risk(features)
+@router.post("/anomaly")
+def detect_anomaly(
+    request: PredictionRequest
+):
+    return predict_anomaly(
+        request.features
+    )
+
+
+@router.get("/status")
+def ml_status():
+    return {
+        "status": "active",
+        "model": "Isolation Forest",
+        "purpose": "Insider threat anomaly detection"
+    }

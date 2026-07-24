@@ -1,38 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database.database import engine, Base
-from app.models.models import (
-    Employee,
-    LoginActivity,
-    FileAccess,
-    EmailActivity,
-    DeviceActivity,
-    HttpActivity,
-    AnomalyResult,
-    User
-)
+from app.database.database import Base, engine
 
-from app.routes import employee
-from app.routes import login_activity
-from app.routes import file_access
-from app.routes import risk
-from app.routes import alert
-from app.routes import ml
-from app.routes import dashboard
-from app.routes import anomaly
 from app.routes import auth
-
+from app.routes import dashboard
+from app.routes import employee
+from app.routes import activity
+from app.routes import file_access
+from app.routes import login_activity
+from app.routes import anomaly
+from app.routes import ml
+from app.routes import alert
+from app.routes import investigation
+from app.routes import risk
+from app.routes import report
+from app.routes import profile
 
 Base.metadata.create_all(bind=engine)
 
-
 app = FastAPI(
     title="Insider Threat Behavioral Intelligence System",
-    description="AI-powered system to monitor employee behavior, detect insider threats, calculate risk scores, generate alerts, and perform ML-based anomaly detection.",
+    description="AI-powered insider threat detection and behavioral intelligence platform",
     version="1.0.0"
 )
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,32 +33,34 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
-
-app.include_router(employee.router)
-app.include_router(login_activity.router)
-app.include_router(file_access.router)
-app.include_router(risk.router)
-app.include_router(alert.router)
-app.include_router(ml.router)
-app.include_router(dashboard.router)
-app.include_router(anomaly.router)
 app.include_router(auth.router)
+app.include_router(dashboard.router)
+app.include_router(employee.router)
+app.include_router(activity.router)
+app.include_router(file_access.router)
+app.include_router(login_activity.router)
+app.include_router(anomaly.router)
+app.include_router(ml.router)
+app.include_router(alert.router)
+app.include_router(investigation.router)
+app.include_router(risk.router)
+app.include_router(report.router)
+app.include_router(profile.router)
 
 
 @app.get("/")
-def home():
+def root():
     return {
-        "message": "Welcome to the Insider Threat Behavioral Intelligence System API",
-        "version": "2.0.0",
-        "status": "Running"
+        "message": "Insider Threat Behavioral Intelligence System API",
+        "status": "running"
     }
 
 
 @app.get("/health")
-def health_check():
+def health():
     return {
         "status": "healthy",
         "database": "connected"

@@ -12,15 +12,12 @@ router = APIRouter(
 
 
 def get_db():
-
     db = SessionLocal()
 
     try:
-
         yield db
 
     finally:
-
         db.close()
 
 
@@ -28,7 +25,6 @@ def get_db():
 def get_anomaly_results(
     db: Session = Depends(get_db)
 ):
-
     results = (
         db.query(AnomalyResult)
         .order_by(
@@ -53,7 +49,6 @@ def get_anomaly_results(
             "risk_score": result.risk_score,
             "risk_level": result.risk_level
         }
-
         for result in results
     ]
 
@@ -62,70 +57,49 @@ def get_anomaly_results(
 def get_anomaly_summary(
     db: Session = Depends(get_db)
 ):
+    total_users = db.query(
+        AnomalyResult
+    ).count()
 
-    total_users = (
-        db.query(AnomalyResult)
-        .count()
-    )
+    total_anomalies = db.query(
+        AnomalyResult
+    ).filter(
+        AnomalyResult.anomaly == 1
+    ).count()
 
-    total_anomalies = (
-        db.query(AnomalyResult)
-        .filter(
-            AnomalyResult.anomaly == 1
-        )
-        .count()
-    )
+    critical_risk = db.query(
+        AnomalyResult
+    ).filter(
+        AnomalyResult.risk_level == "Critical"
+    ).count()
 
-    critical_risk = (
-        db.query(AnomalyResult)
-        .filter(
-            AnomalyResult.risk_level == "Critical"
-        )
-        .count()
-    )
+    high_risk = db.query(
+        AnomalyResult
+    ).filter(
+        AnomalyResult.risk_level == "High"
+    ).count()
 
-    high_risk = (
-        db.query(AnomalyResult)
-        .filter(
-            AnomalyResult.risk_level == "High"
-        )
-        .count()
-    )
+    medium_risk = db.query(
+        AnomalyResult
+    ).filter(
+        AnomalyResult.risk_level == "Medium"
+    ).count()
 
-    medium_risk = (
-        db.query(AnomalyResult)
-        .filter(
-            AnomalyResult.risk_level == "Medium"
-        )
-        .count()
-    )
-
-    low_risk = (
-        db.query(AnomalyResult)
-        .filter(
-            AnomalyResult.risk_level == "Low"
-        )
-        .count()
-    )
+    low_risk = db.query(
+        AnomalyResult
+    ).filter(
+        AnomalyResult.risk_level == "Low"
+    ).count()
 
     return {
-
         "total_users": total_users,
-
         "total_anomalies": total_anomalies,
-
         "risk_distribution": {
-
             "critical": critical_risk,
-
             "high": high_risk,
-
             "medium": medium_risk,
-
             "low": low_risk
-
         }
-
     }
 
 
@@ -133,7 +107,6 @@ def get_anomaly_summary(
 def get_top_risk_users(
     db: Session = Depends(get_db)
 ):
-
     results = (
         db.query(AnomalyResult)
         .order_by(
@@ -144,18 +117,11 @@ def get_top_risk_users(
     )
 
     return [
-
         {
             "user": result.user,
-
             "risk_score": result.risk_score,
-
             "risk_level": result.risk_level,
-
             "anomaly_score": result.anomaly_score
-
         }
-
         for result in results
-
     ]

@@ -1,683 +1,372 @@
 import { useEffect, useState } from "react";
-import "./Dashboard.css";
-import api from "../../services/api";
-
+import axios from "axios";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
+  Users,
+  Activity,
+  FileText,
+  Smartphone,
+  Mail,
+  AlertTriangle,
+  ShieldAlert,
+  RefreshCw
+} from "lucide-react";
+import "./Dashboard.css";
+
+const API_URL = "http://127.0.0.1:8000";
 
 function Dashboard() {
-  const [dashboard, setDashboard] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/dashboard/summary", {
-        timeout: 300000,
-      });
+      const response = await axios.get(
+        `${API_URL}/dashboard/summary`
+      );
 
-      console.log("Dashboard API Response:", response.data);
-
-      setDashboard(response.data);
-    } catch (error) {
-      console.error("Dashboard API Error:", error);
-
-      if (error.code === "ECONNABORTED") {
-        setError("Dashboard request timed out.");
-      } else if (error.response) {
-        setError(
-          error.response.data?.detail ||
-            `Server error: ${error.response.status}`
-        );
-      } else if (error.request) {
-        setError("Unable to connect to backend.");
-      } else {
-        setError("Unable to load dashboard data.");
-      }
+      setData(response.data);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Unable to load dashboard data"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
   if (loading) {
     return (
-      <div className="dashboard">
-        <div className="status-message">
-          <div className="loading-spinner"></div>
-          <h2>Loading Dashboard...</h2>
-          <p>Processing security analytics data...</p>
-        </div>
+      <div className="dashboard-state">
+        <RefreshCw
+          size={25}
+          className="dashboard-spinner"
+        />
+        <p>Loading security intelligence...</p>
       </div>
     );
   }
 
-  if (error || !dashboard) {
+  if (error) {
     return (
-      <div className="dashboard">
-        <div className="status-message error-message">
-          <h2>{error || "Unable to load dashboard data."}</h2>
+      <div className="dashboard-state error">
+        <AlertTriangle size={28} />
+        <p>{error}</p>
 
-          <button onClick={loadDashboard}>
-            Try Again
-          </button>
-        </div>
+        <button
+          onClick={loadDashboard}
+        >
+          Try Again
+        </button>
       </div>
     );
   }
 
-  const {
-    stats = {},
-    riskDistribution = {},
-    anomalyDistribution = {},
-    topRiskUsers = [],
-    recentLogins = [],
-    recentFileAccess = [],
-  } = dashboard;
+  const stats = data?.stats || {};
+  const risk = data?.riskDistribution || {};
 
-  const riskChartData = [
+  const statCards = [
     {
-      name: "Critical",
-      value: Number(riskDistribution.critical || 0),
+      title: "Total Employees",
+      value: stats.totalEmployees || 0,
+      icon: Users,
+      className: "blue"
     },
     {
-      name: "High",
-      value: Number(riskDistribution.high || 0),
+      title: "Login Activities",
+      value: stats.loginActivities || 0,
+      icon: Activity,
+      className: "purple"
     },
     {
-      name: "Medium",
-      value: Number(riskDistribution.medium || 0),
+      title: "File Access Events",
+      value: stats.fileAccessEvents || 0,
+      icon: FileText,
+      className: "orange"
     },
     {
-      name: "Low",
-      value: Number(riskDistribution.low || 0),
-    },
-  ];
-
-  const anomalyChartData = [
-    {
-      name: "Anomalies",
-      value: Number(anomalyDistribution.anomalies || 0),
+      title: "Device Activities",
+      value: stats.deviceActivities || 0,
+      icon: Smartphone,
+      className: "cyan"
     },
     {
-      name: "Normal",
-      value: Number(anomalyDistribution.normal || 0),
-    },
-  ];
-
-  const activityChartData = [
-    {
-      name: "Logins",
-      value: Number(stats.loginActivities || 0),
+      title: "Email Activities",
+      value: stats.emailActivities || 0,
+      icon: Mail,
+      className: "green"
     },
     {
-      name: "File Access",
-      value: Number(stats.fileAccessEvents || 0),
-    },
-    {
-      name: "Emails",
-      value: Number(stats.emailActivities || 0),
-    },
-    {
-      name: "Devices",
-      value: Number(stats.deviceActivities || 0),
-    },
+      title: "Detected Anomalies",
+      value: stats.totalAnomalies || 0,
+      icon: AlertTriangle,
+      className: "red"
+    }
   ];
 
   return (
     <div className="dashboard">
-
-      {/* HEADER */}
-
       <div className="dashboard-header">
-
         <div>
-          <div className="dashboard-title-row">
-            <div className="ai-logo">AI</div>
+          <h1>Security Dashboard</h1>
 
-            <div>
-              <h1>Insider AI</h1>
-
-              <p>
-                Behavioral intelligence and security monitoring overview
-              </p>
-            </div>
-          </div>
+          <p>
+            Insider threat behavioral intelligence overview
+          </p>
         </div>
 
         <button
-          className="refresh-button"
+          className="dashboard-refresh"
           onClick={loadDashboard}
         >
-          ↻ Refresh Data
+          <RefreshCw size={16} />
+          Refresh
         </button>
-
       </div>
 
-      {/* STAT CARDS */}
+      <div className="dashboard-stats-grid">
+        {statCards.map((card) => {
+          const Icon = card.icon;
 
-      <div className="stats-grid">
+          return (
+            <div
+              className="dashboard-stat-card"
+              key={card.title}
+            >
+              <div
+                className={`dashboard-stat-icon ${card.className}`}
+              >
+                <Icon size={21} />
+              </div>
 
-        <div className="stat-card">
-          <span>Total Users</span>
+              <div className="dashboard-stat-content">
+                <span>{card.title}</span>
 
-          <strong>
-            {Number(stats.totalEmployees || 0).toLocaleString()}
-          </strong>
-
-          <small>Registered employees</small>
-        </div>
-
-        <div className="stat-card">
-          <span>Login Activities</span>
-
-          <strong>
-            {Number(stats.loginActivities || 0).toLocaleString()}
-          </strong>
-
-          <small>Authentication events</small>
-        </div>
-
-        <div className="stat-card">
-          <span>File Access Events</span>
-
-          <strong>
-            {Number(stats.fileAccessEvents || 0).toLocaleString()}
-          </strong>
-
-          <small>File interactions</small>
-        </div>
-
-        <div className="stat-card">
-          <span>Total Anomalies</span>
-
-          <strong>
-            {Number(stats.totalAnomalies || 0).toLocaleString()}
-          </strong>
-
-          <small>Detected anomalies</small>
-        </div>
-
-        <div className="stat-card critical-card">
-          <span>Critical Risk</span>
-
-          <strong>
-            {Number(stats.criticalRisk || 0).toLocaleString()}
-          </strong>
-
-          <small>Immediate attention</small>
-        </div>
-
-        <div className="stat-card high-card">
-          <span>High Risk</span>
-
-          <strong>
-            {Number(stats.highRisk || 0).toLocaleString()}
-          </strong>
-
-          <small>Requires monitoring</small>
-        </div>
-
-        <div className="stat-card medium-card">
-          <span>Medium Risk</span>
-
-          <strong>
-            {Number(stats.mediumRisk || 0).toLocaleString()}
-          </strong>
-
-          <small>Needs observation</small>
-        </div>
-
-        <div className="stat-card low-card">
-          <span>Low Risk</span>
-
-          <strong>
-            {Number(stats.lowRisk || 0).toLocaleString()}
-          </strong>
-
-          <small>Normal behavior</small>
-        </div>
-
+                <strong>
+                  {Number(card.value).toLocaleString()}
+                </strong>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* CHARTS */}
-
-      <div className="charts-grid">
-
-        <div className="dashboard-box chart-box">
-
-          <div className="box-header">
+      <div className="dashboard-main-grid">
+        <div className="dashboard-panel">
+          <div className="dashboard-panel-header">
             <div>
               <h2>Risk Distribution</h2>
-              <p>Current employee risk levels</p>
+
+              <p>
+                Current behavioral risk classification
+              </p>
+            </div>
+
+            <ShieldAlert size={21} />
+          </div>
+
+          <div className="risk-list">
+            <div className="risk-row">
+              <div className="risk-label">
+                <span className="risk-dot critical" />
+                Critical
+              </div>
+
+              <strong>
+                {Number(
+                  risk.critical || 0
+                ).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="risk-progress">
+              <div
+                className="risk-progress-bar critical"
+                style={{
+                  width: `${risk.critical ? 100 : 0}%`
+                }}
+              />
+            </div>
+
+            <div className="risk-row">
+              <div className="risk-label">
+                <span className="risk-dot high" />
+                High
+              </div>
+
+              <strong>
+                {Number(
+                  risk.high || 0
+                ).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="risk-progress">
+              <div
+                className="risk-progress-bar high"
+                style={{
+                  width: `${risk.high ? 100 : 0}%`
+                }}
+              />
+            </div>
+
+            <div className="risk-row">
+              <div className="risk-label">
+                <span className="risk-dot medium" />
+                Medium
+              </div>
+
+              <strong>
+                {Number(
+                  risk.medium || 0
+                ).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="risk-progress">
+              <div
+                className="risk-progress-bar medium"
+                style={{
+                  width: `${risk.medium ? 100 : 0}%`
+                }}
+              />
+            </div>
+
+            <div className="risk-row">
+              <div className="risk-label">
+                <span className="risk-dot low" />
+                Low
+              </div>
+
+              <strong>
+                {Number(
+                  risk.low || 0
+                ).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="risk-progress">
+              <div
+                className="risk-progress-bar low"
+                style={{
+                  width: `${risk.low ? 100 : 0}%`
+                }}
+              />
             </div>
           </div>
-
-          <div className="chart-container">
-
-            <ResponsiveContainer
-              width="100%"
-              height={320}
-            >
-
-              <PieChart>
-
-                <Pie
-                  data={riskChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={105}
-                  label
-                >
-
-                  {riskChartData.map((entry, index) => (
-                    <Cell
-                      key={`risk-cell-${index}`}
-                    />
-                  ))}
-
-                </Pie>
-
-                <Tooltip />
-
-                <Legend />
-
-              </PieChart>
-
-            </ResponsiveContainer>
-
-          </div>
-
         </div>
 
-        <div className="dashboard-box chart-box">
-
-          <div className="box-header">
+        <div className="dashboard-panel">
+          <div className="dashboard-panel-header">
             <div>
-              <h2>Activity Overview</h2>
-              <p>Security event volume</p>
+              <h2>Security Overview</h2>
+
+              <p>
+                System activity monitoring status
+              </p>
+            </div>
+
+            <Activity size={21} />
+          </div>
+
+          <div className="overview-list">
+            <div className="overview-item">
+              <span>Login Monitoring</span>
+              <strong className="status-active">
+                Active
+              </strong>
+            </div>
+
+            <div className="overview-item">
+              <span>File Monitoring</span>
+              <strong className="status-active">
+                Active
+              </strong>
+            </div>
+
+            <div className="overview-item">
+              <span>Device Monitoring</span>
+              <strong className="status-active">
+                Active
+              </strong>
+            </div>
+
+            <div className="overview-item">
+              <span>Email Monitoring</span>
+              <strong className="status-active">
+                Active
+              </strong>
+            </div>
+
+            <div className="overview-item">
+              <span>ML Detection Engine</span>
+              <strong className="status-active">
+                Ready
+              </strong>
             </div>
           </div>
-
-          <div className="chart-container">
-
-            <ResponsiveContainer
-              width="100%"
-              height={320}
-            >
-
-              <BarChart
-                data={activityChartData}
-              >
-
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                />
-
-                <XAxis
-                  dataKey="name"
-                />
-
-                <YAxis />
-
-                <Tooltip />
-
-                <Bar
-                  dataKey="value"
-                  name="Events"
-                />
-
-              </BarChart>
-
-            </ResponsiveContainer>
-
-          </div>
-
         </div>
-
-        <div className="dashboard-box chart-box">
-
-          <div className="box-header">
-            <div>
-              <h2>Anomaly Detection</h2>
-              <p>Normal versus suspicious behavior</p>
-            </div>
-          </div>
-
-          <div className="chart-container">
-
-            <ResponsiveContainer
-              width="100%"
-              height={320}
-            >
-
-              <PieChart>
-
-                <Pie
-                  data={anomalyChartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={105}
-                  label
-                >
-
-                  {anomalyChartData.map((entry, index) => (
-                    <Cell
-                      key={`anomaly-cell-${index}`}
-                    />
-                  ))}
-
-                </Pie>
-
-                <Tooltip />
-
-                <Legend />
-
-              </PieChart>
-
-            </ResponsiveContainer>
-
-          </div>
-
-        </div>
-
       </div>
 
-      {/* RISK SUMMARY */}
-
-      <div className="dashboard-box">
-
-        <div className="box-header">
+      <div className="dashboard-panel dashboard-data-summary">
+        <div className="dashboard-panel-header">
           <div>
-            <h2>Risk Distribution Summary</h2>
-            <p>Current threat classification</p>
+            <h2>Activity Data Summary</h2>
+
+            <p>
+              Total behavioral telemetry processed by the system
+            </p>
           </div>
+
+          <Activity size={21} />
         </div>
 
-        <div className="risk-list">
-
-          <div className="risk-item critical">
-            <span>Critical</span>
-            <strong>{riskDistribution.critical || 0}</strong>
+        <div className="data-summary-grid">
+          <div className="data-summary-item">
+            <span>Login Records</span>
+            <strong>
+              {Number(
+                stats.loginActivities || 0
+              ).toLocaleString()}
+            </strong>
           </div>
 
-          <div className="risk-item high">
-            <span>High</span>
-            <strong>{riskDistribution.high || 0}</strong>
+          <div className="data-summary-item">
+            <span>File Records</span>
+            <strong>
+              {Number(
+                stats.fileAccessEvents || 0
+              ).toLocaleString()}
+            </strong>
           </div>
 
-          <div className="risk-item medium">
-            <span>Medium</span>
-            <strong>{riskDistribution.medium || 0}</strong>
+          <div className="data-summary-item">
+            <span>Device Records</span>
+            <strong>
+              {Number(
+                stats.deviceActivities || 0
+              ).toLocaleString()}
+            </strong>
           </div>
 
-          <div className="risk-item low">
-            <span>Low</span>
-            <strong>{riskDistribution.low || 0}</strong>
+          <div className="data-summary-item">
+            <span>Email Records</span>
+            <strong>
+              {Number(
+                stats.emailActivities || 0
+              ).toLocaleString()}
+            </strong>
           </div>
-
         </div>
-
       </div>
-
-      {/* TOP RISK USERS */}
-
-      <div className="dashboard-box">
-
-        <div className="box-header">
-          <div>
-            <h2>Top Risk Users</h2>
-            <p>Employees requiring security attention</p>
-          </div>
-        </div>
-
-        <div className="table-container">
-
-          <table>
-
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Risk Score</th>
-                <th>Risk Level</th>
-                <th>Login Count</th>
-                <th>After Hours</th>
-                <th>Weekend Activity</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {topRiskUsers.length === 0 ? (
-
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="empty-message"
-                  >
-                    No risk data available
-                  </td>
-                </tr>
-
-              ) : (
-
-                topRiskUsers.map((user, index) => (
-
-                  <tr
-                    key={`${user.user}-${index}`}
-                  >
-
-                    <td>
-                      <strong>{user.user}</strong>
-                    </td>
-
-                    <td>
-                      {Number(user.risk_score || 0).toFixed(2)}
-                    </td>
-
-                    <td>
-                      <span
-                        className={`risk-badge ${
-                          user.risk_level?.toLowerCase() || "low"
-                        }`}
-                      >
-                        {user.risk_level || "Low"}
-                      </span>
-                    </td>
-
-                    <td>
-                      {Number(
-                        user.login_count || 0
-                      ).toLocaleString()}
-                    </td>
-
-                    <td>
-                      {(Number(
-                        user.after_hours_ratio || 0
-                      ) * 100).toFixed(1)}%
-                    </td>
-
-                    <td>
-                      {(Number(
-                        user.weekend_ratio || 0
-                      ) * 100).toFixed(1)}%
-                    </td>
-
-                  </tr>
-
-                ))
-
-              )}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
-      {/* RECENT LOGIN ACTIVITY */}
-
-      <div className="dashboard-box">
-
-        <div className="box-header">
-          <div>
-            <h2>Recent Login Activity</h2>
-            <p>Latest authentication events</p>
-          </div>
-        </div>
-
-        <div className="table-container">
-
-          <table>
-
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Computer</th>
-                <th>Date</th>
-                <th>Activity</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {recentLogins.length === 0 ? (
-
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="empty-message"
-                  >
-                    No login activity available
-                  </td>
-                </tr>
-
-              ) : (
-
-                recentLogins.map((login, index) => (
-
-                  <tr
-                    key={`${login.id}-${index}`}
-                  >
-
-                    <td>{login.user}</td>
-
-                    <td>{login.pc}</td>
-
-                    <td>{login.date}</td>
-
-                    <td>
-                      <span className="activity-badge">
-                        {login.activity}
-                      </span>
-                    </td>
-
-                  </tr>
-
-                ))
-
-              )}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
-      {/* RECENT FILE ACCESS */}
-
-      <div className="dashboard-box">
-
-        <div className="box-header">
-          <div>
-            <h2>Recent File Access</h2>
-            <p>Latest file interaction events</p>
-          </div>
-        </div>
-
-        <div className="table-container">
-
-          <table>
-
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Computer</th>
-                <th>Date</th>
-                <th>Filename</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {recentFileAccess.length === 0 ? (
-
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="empty-message"
-                  >
-                    No file access activity available
-                  </td>
-                </tr>
-
-              ) : (
-
-                recentFileAccess.map((file, index) => (
-
-                  <tr
-                    key={`${file.id}-${index}`}
-                  >
-
-                    <td>{file.user}</td>
-
-                    <td>{file.pc}</td>
-
-                    <td>{file.date}</td>
-
-                    <td className="filename-cell">
-                      {file.filename}
-                    </td>
-
-                  </tr>
-
-                ))
-
-              )}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
     </div>
   );
 }
