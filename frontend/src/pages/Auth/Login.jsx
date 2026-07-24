@@ -24,18 +24,20 @@ function Login() {
     try {
       setLoading(true);
 
-      const formData = new URLSearchParams();
-
-      formData.append("username", email.trim());
-      formData.append("password", password);
-
-      const response = await api.post("/auth/login", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+      const response = await api.post("/auth/login", {
+        email: email.trim(),
+        password: password,
       });
 
-      localStorage.setItem("access_token", response.data.access_token);
+      const token = response.data.access_token;
+
+      if (!token) {
+        setError("Login successful but token was not received");
+        return;
+      }
+
+      localStorage.setItem("access_token", token);
+
       localStorage.setItem(
         "token_type",
         response.data.token_type || "bearer"
@@ -48,8 +50,16 @@ function Login() {
         );
       }
 
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard", {
+        replace: true,
+      });
+
     } catch (error) {
+      console.error(
+        "Login Error:",
+        error.response?.data || error.message
+      );
+
       if (error.response?.status === 401) {
         setError("Invalid email or password");
       } else if (error.response?.data?.detail) {
@@ -57,6 +67,7 @@ function Login() {
       } else {
         setError("Unable to connect to server");
       }
+
     } finally {
       setLoading(false);
     }
@@ -64,18 +75,28 @@ function Login() {
 
   return (
     <div className="register-page">
+
       <div className="register-card">
+
         <div className="register-header">
+
           <h1>
             Insider<span>AI</span>
           </h1>
 
-          <p>Behavioral Intelligence System</p>
+          <p>
+            Behavioral Intelligence System
+          </p>
+
         </div>
 
         <form onSubmit={handleLogin}>
+
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+
+            <label htmlFor="email">
+              Email Address
+            </label>
 
             <input
               id="email"
@@ -88,10 +109,14 @@ function Login() {
               }}
               autoComplete="email"
             />
+
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+
+            <label htmlFor="password">
+              Password
+            </label>
 
             <input
               id="password"
@@ -104,9 +129,14 @@ function Login() {
               }}
               autoComplete="current-password"
             />
+
           </div>
 
-          {error && <p className="register-error">{error}</p>}
+          {error && (
+            <p className="register-error">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
@@ -115,17 +145,26 @@ function Login() {
           >
             {loading ? "Signing In..." : "Sign In"}
           </button>
+
         </form>
 
         <div className="register-footer">
+
           <p>
             Don't have an account?{" "}
-            <span onClick={() => navigate("/register")}>
+
+            <span
+              onClick={() => navigate("/register")}
+            >
               Create Account
             </span>
+
           </p>
+
         </div>
+
       </div>
+
     </div>
   );
 }

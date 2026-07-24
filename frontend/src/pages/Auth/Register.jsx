@@ -29,41 +29,66 @@ function Register() {
       !password ||
       !confirmPassword
     ) {
-      setError("Please fill in all fields");
+      setError(
+        "Please fill in all fields"
+      );
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(
+        "Password must be at least 6 characters"
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(
+        "Passwords do not match"
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      await api.post("/auth/register", {
-        name: name.trim(),
-        email: email.trim(),
-        password,
-        role,
-      });
+      await api.post(
+        "/auth/register",
+        {
+          full_name: name.trim(),
+          email: email.trim(),
+          password: password,
+          role: role
+        }
+      );
 
-      setSuccess("Account created successfully");
+      setSuccess(
+        "Account created successfully!"
+      );
 
       setTimeout(() => {
         navigate("/");
       }, 1200);
+
     } catch (error) {
-      if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
+      console.error(
+        "Registration Error:",
+        error.response?.data ||
+        error.message
+      );
+
+      if (
+        error.response?.data?.detail
+      ) {
+        setError(
+          error.response.data.detail
+        );
       } else {
-        setError("Registration failed. Please try again.");
+        setError(
+          "Registration failed. Please try again."
+        );
       }
+
     } finally {
       setLoading(false);
     }
@@ -71,18 +96,28 @@ function Register() {
 
   return (
     <div className="register-page">
+
       <div className="register-card">
+
         <div className="register-header">
+
           <h1>
             Insider<span>AI</span>
           </h1>
 
-          <p>Create your security account</p>
+          <p>
+            Create your security account
+          </p>
+
         </div>
 
         <form onSubmit={handleRegister}>
+
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+
+            <label htmlFor="name">
+              Full Name
+            </label>
 
             <input
               id="name"
@@ -95,10 +130,14 @@ function Register() {
               }}
               autoComplete="name"
             />
+
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+
+            <label htmlFor="email">
+              Email Address
+            </label>
 
             <input
               id="email"
@@ -111,10 +150,14 @@ function Register() {
               }}
               autoComplete="email"
             />
+
           </div>
 
           <div className="form-group">
-            <label htmlFor="role">Account Role</label>
+
+            <label htmlFor="role">
+              Account Role
+            </label>
 
             <select
               id="role"
@@ -124,7 +167,11 @@ function Register() {
                 setError("");
               }}
             >
-              <option value="" disabled>
+
+              <option
+                value=""
+                disabled
+              >
                 Select your role
               </option>
 
@@ -143,11 +190,16 @@ function Register() {
               <option value="Administrator">
                 Administrator
               </option>
+
             </select>
+
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+
+            <label htmlFor="password">
+              Password
+            </label>
 
             <input
               id="password"
@@ -160,10 +212,14 @@ function Register() {
               }}
               autoComplete="new-password"
             />
+
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+
+            <label htmlFor="confirmPassword">
+              Confirm Password
+            </label>
 
             <input
               id="confirmPassword"
@@ -171,35 +227,59 @@ function Register() {
               placeholder="Confirm your password"
               value={confirmPassword}
               onChange={(event) => {
-                setConfirmPassword(event.target.value);
+                setConfirmPassword(
+                  event.target.value
+                );
                 setError("");
               }}
               autoComplete="new-password"
             />
+
           </div>
 
-          {error && <p className="register-error">{error}</p>}
+          {error && (
+            <p className="register-error">
+              {error}
+            </p>
+          )}
 
-          {success && <p className="register-success">{success}</p>}
+          {success && (
+            <p className="register-success">
+              {success}
+            </p>
+          )}
 
           <button
             type="submit"
             className="register-button"
             disabled={loading}
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading
+              ? "Creating Account..."
+              : "Create Account"}
           </button>
+
         </form>
 
         <div className="register-footer">
+
           <p>
             Already have an account?{" "}
-            <span onClick={() => navigate("/")}>
+
+            <span
+              onClick={() =>
+                navigate("/")
+              }
+            >
               Sign In
             </span>
+
           </p>
+
         </div>
+
       </div>
+
     </div>
   );
 }
